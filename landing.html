@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="description" content="Turn your daily habits into epic quests. Earn XP, collect gold, and level up your life with QuestLog — the gamified habit tracker.">
+<title>QuestLog — Level Up Your Life</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3d;
+  --accent:#7c6cfc;--accent2:#fc6c8f;--accent3:#6cfcb8;--gold:#fccc6c;
+  --text:#f0eeff;--muted:#6b6b8a;
+  --font:'Space Grotesk',sans-serif;--display:'Syne',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);overflow-x:hidden}
+
+/* ── Canvas ── */
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── All sections above canvas ── */
+nav,.hero,.stats-band,.features,.how-it-works,.cta-section,footer{position:relative;z-index:1}
+
+/* ── Nav ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;max-width:1100px;margin:0 auto}
+.nav-logo{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-0.5px;text-decoration:none;color:var(--text)}
+.nav-logo span{color:var(--accent)}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);padding:9px 20px;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:border-color 0.2s,color 0.2s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-primary{background:var(--accent);border:none;color:#fff;padding:9px 20px;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:opacity 0.2s,transform 0.15s}
+.btn-primary:hover{opacity:0.88;transform:translateY(-1px)}
+
+/* ── Hero ── */
+.hero{max-width:1100px;margin:0 auto;padding:60px 32px 80px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.hero-left{}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(124,108,252,0.12);border:1px solid rgba(124,108,252,0.3);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:99px;margin-bottom:24px}
+.hero h1{font-family:var(--display);font-size:52px;font-weight:800;line-height:1.05;letter-spacing:-1.5px;margin-bottom:22px}
+.hero h1 .grad{background:linear-gradient(135deg,var(--accent),var(--accent2) 50%,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:16px;line-height:1.7;color:var(--muted);margin-bottom:32px;max-width:420px}
+.hero-cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.btn-xl{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:14px 28px;border-radius:14px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(124,108,252,0.35)}
+.btn-xl:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,108,252,0.45)}
+.btn-ghost-xl{background:transparent;border:1px solid var(--border);color:var(--muted);padding:14px 24px;border-radius:14px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:border-color 0.2s,color 0.2s}
+.btn-ghost-xl:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── App Preview ── */
+.hero-preview{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:20px;position:relative;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.5)}
+.hero-preview::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3))}
+.preview-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.preview-logo{font-family:var(--display);font-size:14px;font-weight:800}
+.preview-logo span{color:var(--accent)}
+.preview-badge{background:rgba(108,252,184,0.12);color:var(--accent3);font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px}
+.preview-char{background:var(--surface2);border-radius:14px;padding:12px;margin-bottom:12px}
+.preview-char-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.preview-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.preview-name{font-size:13px;font-weight:700}
+.preview-class{font-size:10px;color:var(--accent);font-weight:600}
+.preview-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.preview-stat{background:var(--bg);border-radius:8px;padding:6px 8px;text-align:center}
+.preview-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase}
+.preview-stat-val{font-size:14px;font-weight:700}
+.preview-tasks-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px}
+.preview-task{background:var(--surface2);border-radius:10px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:center;gap:8px;transition:opacity 0.3s}
+.preview-task.done{opacity:0.45}
+.preview-check{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.3s}
+.preview-task.done .preview-check{background:var(--accent3);border-color:var(--accent3);color:#0a1a10}
+.preview-task-name{font-size:11px;font-weight:500;flex:1}
+.preview-pill{font-size:9px;font-weight:600;padding:1px 6px;border-radius:99px;background:rgba(124,108,252,0.14);color:var(--accent)}
+.preview-pill-gold{background:rgba(252,204,108,0.14);color:var(--gold)}
+/* animated XP popup in preview */
+@keyframes previewXP{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-30px);opacity:0}}
+.preview-xp-pop{position:absolute;font-family:var(--display);font-size:13px;font-weight:800;color:var(--accent3);pointer-events:none;animation:previewXP 0.9s ease-out forwards;text-shadow:0 0 12px rgba(108,252,184,0.6)}
+
+/* ── Stats band ── */
+.stats-band{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px 32px}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;text-align:center}
+.stat-item{}
+.stat-number{font-family:var(--display);font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.stat-lbl{font-size:13px;color:var(--muted);margin-top:4px;font-weight:500}
+
+/* ── Features ── */
+.features{max-width:1100px;margin:0 auto;padding:80px 32px}
+.section-eyebrow{text-align:center;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.section-title{text-align:center;font-family:var(--display);font-size:38px;font-weight:800;letter-spacing:-1px;margin-bottom:14px}
+.section-sub{text-align:center;color:var(--muted);font-size:15px;line-height:1.6;max-width:480px;margin:0 auto 52px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;transition:border-color 0.2s,transform 0.2s}
+.feat-card:hover{border-color:rgba(124,108,252,0.4);transform:translateY(-3px)}
+.feat-icon{font-size:28px;margin-bottom:14px}
+.feat-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.feat-desc{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* ── How it works ── */
+.how-it-works{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:80px 32px}
+.how-inner{max-width:1100px;margin:0 auto}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:52px}
+.step{text-align:center;padding:0 16px}
+.step-number{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:18px;font-weight:800;margin:0 auto 16px}
+.step-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.step-connector{display:none}
+
+/* ── CTA ── */
+.cta-section{max-width:1100px;margin:0 auto;padding:80px 32px;text-align:center}
+.cta-card{background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:60px 40px;position:relative;overflow:hidden}
+.cta-card::before{content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(124,108,252,0.1) 0%,transparent 70%);pointer-events:none}
+.cta-card h2{font-family:var(--display);font-size:38px;font-weight:800;letter-spacing:-1px;margin-bottom:14px}
+.cta-card p{color:var(--muted);font-size:15px;margin-bottom:32px;max-width:400px;margin-left:auto;margin-right:auto}
+.cta-actions{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border);padding:28px 32px;max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:var(--display);font-size:16px;font-weight:800}
+.footer-logo span{color:var(--accent)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color 0.2s}
+.footer-links a:hover{color:var(--text)}
+.footer-copy{font-size:12px;color:var(--muted)}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  nav{padding:16px 20px}
+  .nav-logo{font-size:18px}
+  .hero{grid-template-columns:1fr;gap:40px;padding:40px 20px 60px}
+  .hero h1{font-size:36px}
+  .hero-preview{order:-1}
+  .stats-inner{grid-template-columns:1fr;gap:20px}
+  .stat-number{font-size:34px}
+  .features{padding:60px 20px}
+  .features-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .section-title{font-size:28px}
+  .how-steps{grid-template-columns:1fr;gap:32px}
+  .how-it-works{padding:60px 20px}
+  .cta-section{padding:60px 20px}
+  .cta-card{padding:40px 24px}
+  .cta-card h2{font-size:28px}
+  footer{padding:24px 20px;flex-direction:column;align-items:flex-start}
+}
+@media(max-width:480px){
+  .features-grid{grid-template-columns:1fr}
+  .hero h1{font-size:32px}
+  .hero-cta{flex-direction:column;align-items:flex-start}
+  .btn-xl,.btn-ghost-xl{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- Nav -->
+<nav>
+  <a href="landing.html" class="nav-logo">QUEST<span>LOG</span></a>
+  <div class="nav-actions">
+    <a href="auth.html?mode=signin" class="btn-ghost">Sign In</a>
+    <a href="auth.html?mode=signup" class="btn-primary">Start Free</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-badge">✦ Gamified Habit Tracking</div>
+    <h1>Turn Daily Habits Into <span class="grad">Epic Quests</span></h1>
+    <p>Earn XP, collect gold, and level up your character — just by completing your real-world habits. Build streaks, unlock rewards, and become the hero of your own story.</p>
+    <div class="hero-cta">
+      <a href="auth.html?mode=signup" class="btn-xl">Start Your Quest →</a>
+      <a href="auth.html?mode=signin" class="btn-ghost-xl">Already playing?</a>
+    </div>
+  </div>
+
+  <!-- Animated App Preview -->
+  <div class="hero-preview" id="heroPreview">
+    <div class="preview-header">
+      <div class="preview-logo">QUEST<span>LOG</span></div>
+      <div class="preview-badge">⚡ Live</div>
+    </div>
+    <div class="preview-char">
+      <div class="preview-char-row">
+        <div class="preview-avatar">⚔️</div>
+        <div>
+          <div class="preview-name" id="previewName">Loading...</div>
+          <div class="preview-class">Guardian of Goals</div>
+        </div>
+      </div>
+      <div class="preview-stats">
+        <div class="preview-stat"><div class="preview-stat-lbl">XP</div><div class="preview-stat-val" style="color:var(--accent)" id="previewXP">0</div></div>
+        <div class="preview-stat"><div class="preview-stat-lbl">HP</div><div class="preview-stat-val" style="color:var(--accent2)">100</div></div>
+        <div class="preview-stat"><div class="preview-stat-lbl">Gold</div><div class="preview-stat-val" style="color:var(--gold)" id="previewGold">0</div></div>
+      </div>
+    </div>
+    <div class="preview-tasks-title">⚡ Daily Habits</div>
+    <div id="previewTaskList">
+      <div class="preview-task" id="pt0">
+        <div class="preview-check"></div>
+        <div class="preview-task-name">Morning facial routine</div>
+        <span class="preview-pill">+15 XP</span>
+        <span class="preview-pill preview-pill-gold">+8g</span>
+      </div>
+      <div class="preview-task" id="pt1">
+        <div class="preview-check"></div>
+        <div class="preview-task-name">Drink 8 glasses of water</div>
+        <span class="preview-pill">+10 XP</span>
+        <span class="preview-pill preview-pill-gold">+5g</span>
+      </div>
+      <div class="preview-task" id="pt2">
+        <div class="preview-check"></div>
+        <div class="preview-task-name">10 min walk / movement</div>
+        <span class="preview-pill">+20 XP</span>
+        <span class="preview-pill preview-pill-gold">+10g</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Band -->
+<div class="stats-band">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-number" data-target="12480">0</div>
+      <div class="stat-lbl">Quests Completed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="89">0</div>
+      <div class="stat-lbl">Longest Streak (days)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="430">0</div>
+      <div class="stat-lbl">Rewards Unlocked</div>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<section class="features">
+  <div class="section-eyebrow">Why QuestLog</div>
+  <h2 class="section-title">Everything You Need to<br>Level Up Your Life</h2>
+  <p class="section-sub">A complete habit tracking system with the dopamine-hit of a video game — built for real life.</p>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon">⚡</div>
+      <div class="feat-title">Daily & Weekly Quests</div>
+      <div class="feat-desc">Build a custom roster of daily habits and weekly routines. Each completion earns XP and gold toward real rewards.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔥</div>
+      <div class="feat-title">Streak System</div>
+      <div class="feat-desc">Complete all your dailies to grow your streak. Watch the fire emoji grow as you build unstoppable momentum.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💰</div>
+      <div class="feat-title">Gold & Rewards</div>
+      <div class="feat-desc">Earn gold by completing tasks, then spend it on your own custom real-life rewards — guilt-free.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🏆</div>
+      <div class="feat-title">Goal Tracking</div>
+      <div class="feat-desc">Set monthly milestones and track progress visually. Keep your bigger ambitions in sight while handling daily quests.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title">Progress Analytics</div>
+      <div class="feat-desc">Weekly calendar, habit completion rates, all-time stats. Watch your consistency improve over time.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📱</div>
+      <div class="feat-title">Works Offline</div>
+      <div class="feat-desc">Install as a PWA on your home screen. QuestLog works without internet so nothing interrupts your streak.</div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works">
+  <div class="how-inner">
+    <div class="section-eyebrow">Get Started</div>
+    <h2 class="section-title" style="text-align:center">Your Quest Begins in<br>3 Simple Steps</h2>
+    <div class="how-steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-title">Create Your Character</div>
+        <div class="step-desc">Sign up and give your hero a name. Your character starts at Level 1 — every completed habit earns XP toward the next level.</div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-title">Accept Your Daily Quests</div>
+        <div class="step-desc">Add your habits as quests — morning routine, workouts, hydration, whatever matters to you. Check them off to earn XP and gold.</div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-title">Level Up & Claim Rewards</div>
+        <div class="step-desc">Watch your level rise, your streak grow, and your gold pile up. Spend your gold on real-life treats you define yourself.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-card">
+    <h2>Ready to Begin<br>Your Quest?</h2>
+    <p>Join heroes who are turning boring routines into an epic daily adventure.</p>
+    <div class="cta-actions">
+      <a href="auth.html?mode=signup" class="btn-xl">Create Your Character</a>
+      <a href="auth.html?mode=signin" class="btn-ghost-xl">Sign In</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">QUEST<span>LOG</span></div>
+  <div class="footer-copy">© 2026 QuestLog. All rights reserved.</div>
+</footer>
+
+<script>
+// ═══════════════════════════════
+// PARTICLE SYSTEM
+// ═══════════════════════════════
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function makeParticle() {
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.35,
+    vy: (Math.random() - 0.5) * 0.35,
+    r: Math.random() * 1.8 + 0.4,
+    alpha: Math.random() * 0.5 + 0.1,
+  };
+}
+
+function initParticles() {
+  const count = Math.min(80, Math.floor(W * H / 14000));
+  particles = Array.from({ length: count }, makeParticle);
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, W, H);
+  // Draw connecting lines
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 110) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(124,108,252,${0.08 * (1 - dist / 110)})`;
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+      }
+    }
+  }
+  // Draw dots
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(124,108,252,${p.alpha})`;
+    ctx.fill();
+  });
+}
+
+function tickParticles() {
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < -10) p.x = W + 10;
+    if (p.x > W + 10) p.x = -10;
+    if (p.y < -10) p.y = H + 10;
+    if (p.y > H + 10) p.y = -10;
+  });
+}
+
+function animateParticles() {
+  tickParticles();
+  drawParticles();
+  requestAnimationFrame(animateParticles);
+}
+
+window.addEventListener('resize', () => { resize(); initParticles(); });
+resize();
+initParticles();
+animateParticles();
+
+// ═══════════════════════════════
+// COUNTER ANIMATION
+// ═══════════════════════════════
+function animateCounter(el, target, duration) {
+  let start = 0;
+  const step = target / (duration / 16);
+  const tick = () => {
+    start = Math.min(start + step, target);
+    el.textContent = Math.floor(start).toLocaleString();
+    if (start < target) requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const target = parseInt(entry.target.dataset.target);
+      animateCounter(entry.target, target, 1400);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('[data-target]').forEach(el => observer.observe(el));
+
+// ═══════════════════════════════
+// PREVIEW CARD ANIMATION
+// ═══════════════════════════════
+const previewTasks = [
+  { el: document.getElementById('pt0'), xp: 15, gold: 8 },
+  { el: document.getElementById('pt1'), xp: 10, gold: 5 },
+  { el: document.getElementById('pt2'), xp: 20, gold: 10 },
+];
+
+let previewXPTotal = 0;
+let previewGoldTotal = 0;
+let previewIdx = 0;
+const previewXPEl = document.getElementById('previewXP');
+const previewGoldEl = document.getElementById('previewGold');
+const previewNameEl = document.getElementById('previewName');
+const names = ['Hero', 'Champion', 'Legend'];
+previewNameEl.textContent = names[0];
+
+function completePreviewTask(task) {
+  task.el.classList.add('done');
+  const check = task.el.querySelector('.preview-check');
+  check.textContent = '✓';
+
+  // XP popup
+  const pop = document.createElement('div');
+  pop.className = 'preview-xp-pop';
+  pop.textContent = '+' + task.xp + ' XP';
+  const rect = task.el.getBoundingClientRect();
+  const previewRect = document.getElementById('heroPreview').getBoundingClientRect();
+  pop.style.left = (rect.right - previewRect.left - 40) + 'px';
+  pop.style.top = (rect.top - previewRect.top) + 'px';
+  document.getElementById('heroPreview').appendChild(pop);
+  setTimeout(() => pop.remove(), 950);
+
+  previewXPTotal += task.xp;
+  previewGoldTotal += task.gold;
+  previewXPEl.textContent = previewXPTotal;
+  previewGoldEl.textContent = previewGoldTotal;
+}
+
+function resetPreview() {
+  previewTasks.forEach(t => {
+    t.el.classList.remove('done');
+    t.el.querySelector('.preview-check').textContent = '';
+  });
+  previewIdx = 0;
+  previewXPTotal = 0;
+  previewGoldTotal = 0;
+  previewXPEl.textContent = '0';
+  previewGoldEl.textContent = '0';
+}
+
+function runPreviewAnimation() {
+  if (previewIdx < previewTasks.length) {
+    setTimeout(() => {
+      completePreviewTask(previewTasks[previewIdx]);
+      previewIdx++;
+      runPreviewAnimation();
+    }, previewIdx === 0 ? 1200 : 900);
+  } else {
+    // Pause then reset
+    setTimeout(() => {
+      resetPreview();
+      setTimeout(runPreviewAnimation, 800);
+    }, 2800);
+  }
+}
+
+// Start preview animation after a short delay
+setTimeout(runPreviewAnimation, 1500);
+</script>
+</body>
+</html>

@@ -170,6 +170,47 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .loading-dot:nth-child(3){animation-delay:0.4s;background:var(--accent3)}
 @keyframes dotPulse{0%,100%{transform:scale(0.6);opacity:0.4}50%{transform:scale(1);opacity:1}}
 .loading-msg{font-size:12px;color:var(--muted)}
+
+/* ── User menu ── */
+.user-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;position:relative;transition:transform 0.15s}
+.user-btn:hover{transform:scale(1.08)}
+.user-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface2);border:1px solid var(--border);border-radius:14px;min-width:180px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden;display:none}
+.user-menu.open{display:block}
+.user-menu-header{padding:12px 14px;border-bottom:1px solid var(--border)}
+.user-menu-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-menu-email{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-menu-item{display:flex;align-items:center;gap:9px;padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.15s;border:none;background:transparent;color:var(--text);width:100%;text-align:left}
+.user-menu-item:hover{background:var(--surface)}
+.user-menu-item.danger{color:var(--accent2)}
+.user-menu-sep{height:1px;background:var(--border);margin:4px 0}
+
+/* ── Settings / Confirm Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:24px 20px 36px;transform:translateY(40px);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.modal-handle{width:36px;height:4px;border-radius:99px;background:var(--border);margin:0 auto 20px}
+.modal-title{font-family:var(--display);font-size:18px;font-weight:800;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.modal-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;margin-bottom:14px;transition:border-color 0.2s}
+.modal-input:focus{border-color:var(--accent)}
+.modal-btn{width:100%;padding:13px;border-radius:12px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;border:none;transition:opacity 0.2s,transform 0.15s;margin-bottom:10px}
+.modal-btn:hover{opacity:0.88;transform:translateY(-1px)}
+.modal-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.modal-btn.danger{background:rgba(252,108,143,0.12);color:var(--accent2);border:1px solid rgba(252,108,143,0.25)}
+.modal-btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+
+/* ── Admin tab ── */
+.admin-user-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px}
+.admin-user-row{display:flex;align-items:center;gap:10px}
+.admin-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.admin-user-name{font-size:14px;font-weight:600}
+.admin-user-email{font-size:11px;color:var(--muted);margin-top:1px}
+.admin-user-stats{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.admin-stat{font-size:11px;color:var(--muted)}
+.admin-stat strong{color:var(--text);font-weight:600}
+.admin-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(252,204,108,0.14);color:var(--gold);margin-left:6px}
 </style>
 </head>
 <body>
@@ -194,9 +235,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <h1>QUEST<span>LOG</span></h1>
       <div class="day-label" id="dayLabel"></div>
     </div>
-    <div class="countdown-wrap">
-      <div class="countdown-label">Reset in</div>
-      <div class="countdown" id="countdown">--:--:--</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="countdown-wrap" style="text-align:right">
+        <div class="countdown-label">Reset in</div>
+        <div class="countdown" id="countdown">--:--:--</div>
+      </div>
+      <!-- User menu button -->
+      <div style="position:relative">
+        <button class="user-btn" id="userBtn" onclick="toggleUserMenu()" title="Account">?</button>
+        <div class="user-menu" id="userMenu">
+          <div class="user-menu-header">
+            <div class="user-menu-name" id="menuName">—</div>
+            <div class="user-menu-email" id="menuEmail">—</div>
+          </div>
+          <button class="user-menu-item" onclick="openSettings()">⚙️ Settings</button>
+          <div class="user-menu-sep"></div>
+          <button class="user-menu-item danger" onclick="confirmLogout()">🚪 Log Out</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -214,7 +270,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <div class="char-top">
         <div class="avatar">⚔️<div class="level-badge" id="levelBadge">Lv 1</div></div>
         <div class="char-info">
-          <h2>Hero</h2>
+          <h2 id="charName">Hero</h2>
           <div class="char-class" id="charClass">Warrior of Habits</div>
         </div>
       </div>
@@ -335,7 +391,47 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     <div class="reward-grid" id="rewardGrid"></div>
   </div>
 
+  <!-- ADMIN TAB (hidden unless user is admin) -->
+  <div class="tab-pane" id="pane-admin" style="display:none">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">👑 All Players</div>
+        <div class="section-count" id="adminUserCount">0</div>
+      </div>
+      <div id="adminUserList"><div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Loading players...</div></div>
+    </div>
+  </div>
+
 </div><!-- end .app -->
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsOverlay" onclick="closeSettings(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Settings</div>
+    <div class="modal-sub">Update your hero profile</div>
+    <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Hero Name</label>
+    <input class="modal-input" type="text" id="settingsName" placeholder="Enter display name" maxlength="30">
+    <button class="modal-btn primary" onclick="saveSettings()">Save Changes</button>
+    <div style="height:1px;background:var(--border);margin:6px 0 14px"></div>
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Danger Zone</div>
+    <button class="modal-btn danger" onclick="openDeleteAccount()">Delete My Account</button>
+    <button class="modal-btn ghost" onclick="closeSettings()">Cancel</button>
+  </div>
+</div>
+
+<!-- Delete Account Confirm Modal -->
+<div class="modal-overlay" id="deleteOverlay" onclick="closeDeleteAccount(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Delete Account?</div>
+    <div class="modal-sub">This permanently deletes all your quests, progress, streaks, and rewards. This action cannot be undone.</div>
+    <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Type <strong style="color:var(--accent2)">delete</strong> to confirm</label>
+    <input class="modal-input" type="text" id="deleteConfirmInput" placeholder="delete">
+    <button class="modal-btn danger" id="btnDeleteAccount" onclick="handleDeleteAccount()">Delete Everything</button>
+    <button class="modal-btn ghost" onclick="closeDeleteAccount()">Cancel</button>
+  </div>
+</div>
 
 <!-- Tab bar -->
 <div class="tabbar">
@@ -351,6 +447,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   <div class="tab-btn" id="tab-rewards" onclick="switchTab('rewards')">
     <div class="tab-icon">🎁</div><div class="tab-lbl">Rewards</div>
   </div>
+  <div class="tab-btn" id="tab-admin" onclick="switchTab('admin')" style="display:none">
+    <div class="tab-icon">👑</div><div class="tab-lbl">Admin</div>
+  </div>
 </div>
 
 <!-- Supabase JS SDK -->
@@ -362,7 +461,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 // ═══════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://dmehwmnnplzxmjazgyun.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Fs7rxMuHLz1SzZj1iB_xuw_jhwX6lYF';
-const USER_ID = 'player1';
+let USER_ID = null; // set after auth check
 const CIRC = 176;
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -376,11 +475,32 @@ let character = {};
 let goals = [];
 let rewards = [];
 let todayCompletions = new Set(); // task_ids completed today
+let currentUser = null;   // auth user object
+let userProfile = null;   // profiles table row
 
 // ═══════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════
 async function boot() {
+  setLoading('Checking authentication...');
+
+  // ── Auth guard ──────────────────────────────────────────
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = 'landing.html';
+    return;
+  }
+  currentUser = session.user;
+  USER_ID = session.user.id;
+
+  // Load profile (display name, admin flag)
+  await loadProfile();
+
+  // Sign-out redirect
+  sb.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') window.location.href = 'landing.html';
+  });
+
   setLoading('Connecting to database...');
   try {
     await loadAll();
@@ -576,6 +696,7 @@ function renderChar() {
   document.getElementById('xpBarFill').style.width = xpInLevel + '%';
   const classes = ['Warrior of Habits','Guardian of Goals','Champion of Streaks','Master of Consistency','Legendary Hero'];
   document.getElementById('charClass').textContent = classes[Math.min(lvl - 1, classes.length - 1)];
+  if (userProfile) document.getElementById('charName').textContent = userProfile.display_name || 'Hero';
 }
 
 function renderStreak() {
@@ -770,8 +891,13 @@ function setLoading(msg) {
 function switchTab(tab) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('pane-' + tab).classList.add('active');
+  const pane = document.getElementById('pane-' + tab);
+  if (pane) {
+    pane.style.display = '';
+    pane.classList.add('active');
+  }
   document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'admin') loadAdminData();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -811,6 +937,170 @@ function loadFromCache() {
     todayCompletions = new Set(c.date === todayStr() ? (c.completions || []) : []);
     renderAll();
   } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH / PROFILE
+// ═══════════════════════════════════════════════════════════
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  userProfile = data;
+
+  // Update user menu
+  const name = userProfile?.display_name || currentUser.email?.split('@')[0] || 'Hero';
+  const initial = name.charAt(0).toUpperCase();
+  document.getElementById('userBtn').textContent = initial;
+  document.getElementById('menuName').textContent = name;
+  document.getElementById('menuEmail').textContent = currentUser.email || '';
+
+  // Show admin tab if admin
+  if (userProfile?.is_admin) {
+    document.getElementById('tab-admin').style.display = '';
+    document.getElementById('pane-admin').style.display = 'none'; // hidden until tab clicked
+  }
+}
+
+// ─── User menu ───────────────────────────────────────────
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  menu.classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  const btn  = document.getElementById('userBtn');
+  const menu = document.getElementById('userMenu');
+  if (!btn.contains(e.target) && !menu.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+});
+
+// ─── Logout ──────────────────────────────────────────────
+function confirmLogout() {
+  document.getElementById('userMenu').classList.remove('open');
+  if (confirm('Log out of QuestLog?')) logout();
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = 'landing.html';
+}
+
+// ─── Settings modal ──────────────────────────────────────
+function openSettings() {
+  document.getElementById('userMenu').classList.remove('open');
+  document.getElementById('settingsName').value = userProfile?.display_name || '';
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+
+function closeSettings(e) {
+  if (e && e.target !== document.getElementById('settingsOverlay')) return;
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+
+async function saveSettings() {
+  const name = document.getElementById('settingsName').value.trim();
+  if (!name) { showToast('Please enter a name.'); return; }
+  const { error } = await sb.from('profiles').update({ display_name: name }).eq('id', currentUser.id);
+  if (error) { showToast('❌ Failed to save.'); return; }
+  userProfile.display_name = name;
+  document.getElementById('charName').textContent = name;
+  document.getElementById('userBtn').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('menuName').textContent = name;
+  document.getElementById('settingsOverlay').classList.remove('open');
+  showToast('✓ Profile updated!');
+}
+
+// ─── Delete account modal ────────────────────────────────
+function openDeleteAccount() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('deleteOverlay').classList.add('open');
+}
+
+function closeDeleteAccount(e) {
+  if (e && e.target !== document.getElementById('deleteOverlay')) return;
+  document.getElementById('deleteOverlay').classList.remove('open');
+}
+
+async function handleDeleteAccount() {
+  const val = document.getElementById('deleteConfirmInput').value.trim().toLowerCase();
+  if (val !== 'delete') {
+    showToast('Type "delete" to confirm.');
+    return;
+  }
+  const btn = document.getElementById('btnDeleteAccount');
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+
+  const { data: { session } } = await sb.auth.getSession();
+  const token = session?.access_token;
+
+  // Call edge function to delete auth user + all data
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+  });
+  const json = await res.json();
+
+  if (!res.ok || json.error) {
+    btn.disabled = false;
+    btn.textContent = 'Delete Everything';
+    showToast('❌ ' + (json.error || 'Deletion failed.'));
+    return;
+  }
+
+  await sb.auth.signOut();
+  window.location.href = 'landing.html';
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════════════
+let adminData = { profiles: [], characters: [] };
+
+async function loadAdminData() {
+  const el = document.getElementById('adminUserList');
+  el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px">Loading...</div>';
+
+  const [profilesRes, charsRes] = await Promise.all([
+    sb.from('profiles').select('*').order('created_at'),
+    sb.from('character').select('*'),
+  ]);
+
+  adminData.profiles  = profilesRes.data || [];
+  adminData.characters = charsRes.data || [];
+  document.getElementById('adminUserCount').textContent = adminData.profiles.length;
+  renderAdmin();
+}
+
+function renderAdmin() {
+  const el = document.getElementById('adminUserList');
+  if (!adminData.profiles.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">No users yet.</div>';
+    return;
+  }
+  el.innerHTML = adminData.profiles.map(p => {
+    const char = adminData.characters.find(c => c.user_id === p.id);
+    const joined = new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `
+      <div class="admin-user-card">
+        <div class="admin-user-row">
+          <div class="admin-avatar">${p.avatar_emoji || '⚔️'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="admin-user-name">${p.display_name || '—'}${p.is_admin ? '<span class="admin-badge">Admin</span>' : ''}</div>
+            <div class="admin-user-email">${p.email || '—'}</div>
+          </div>
+        </div>
+        <div class="admin-user-stats">
+          <div class="admin-stat">Level <strong>${char ? char.level || 1 : '—'}</strong></div>
+          <div class="admin-stat">XP <strong>${char ? char.xp || 0 : '—'}</strong></div>
+          <div class="admin-stat">Streak <strong>${char ? char.streak || 0 : '—'}🔥</strong></div>
+          <div class="admin-stat">Completed <strong>${char ? char.total_completed || 0 : '—'}</strong></div>
+          <div class="admin-stat">Joined <strong>${joined}</strong></div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════

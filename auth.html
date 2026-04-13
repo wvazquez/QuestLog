@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0a0f">
+<title>QuestLog — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3d;
+  --accent:#7c6cfc;--accent2:#fc6c8f;--accent3:#6cfcb8;--gold:#fccc6c;
+  --text:#f0eeff;--muted:#6b6b8a;--error:#fc6c8f;
+  --font:'Space Grotesk',sans-serif;--display:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-x:hidden}
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.ambient::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(124,108,252,0.09) 0%,transparent 70%);top:-150px;right:-100px}
+.ambient::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(252,108,143,0.06) 0%,transparent 70%);bottom:-80px;left:-80px}
+
+/* ── Back link ── */
+.back-link{position:fixed;top:24px;left:24px;z-index:10;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:600;text-decoration:none;transition:color 0.2s}
+.back-link:hover{color:var(--text)}
+
+/* ── Card ── */
+.auth-card{position:relative;z-index:1;width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px 32px;overflow:hidden}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3))}
+
+/* ── Logo ── */
+.auth-logo{font-family:var(--display);font-size:22px;font-weight:800;text-align:center;margin-bottom:28px;letter-spacing:-0.5px}
+.auth-logo span{color:var(--accent)}
+
+/* ── Tabs ── */
+.auth-tabs{display:flex;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px}
+.auth-tab{flex:1;text-align:center;padding:8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all 0.2s;border:none;background:transparent;font-family:var(--font)}
+.auth-tab.active{background:var(--accent);color:#fff}
+
+/* ── Form ── */
+.auth-form{display:none}
+.auth-form.active{display:block}
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--muted)}
+.form-input.error{border-color:var(--error)}
+
+/* ── Password field wrapper ── */
+.pw-wrap{position:relative}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:14px;background:none;border:none;padding:4px;transition:color 0.2s}
+.pw-toggle:hover{color:var(--text)}
+
+/* ── Forgot password link ── */
+.forgot-link{text-align:right;margin-top:-8px;margin-bottom:16px}
+.forgot-link a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s}
+.forgot-link a:hover{color:var(--accent)}
+
+/* ── Submit button ── */
+.btn-submit{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:13px;border-radius:12px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s,transform 0.15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-submit:hover:not(:disabled){opacity:0.88;transform:translateY(-1px)}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* ── Divider ── */
+.oauth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:12px;font-weight:500}
+.oauth-divider::before,.oauth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── OAuth buttons ── */
+.oauth-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-oauth{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.btn-oauth:hover{border-color:rgba(124,108,252,0.4);background:rgba(124,108,252,0.05)}
+.oauth-icon{width:18px;height:18px;flex-shrink:0}
+
+/* ── Switch mode ── */
+.switch-mode{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
+.switch-mode a{color:var(--accent);text-decoration:none;font-weight:600}
+.switch-mode a:hover{text-decoration:underline}
+
+/* ── Error / info message ── */
+.form-msg{font-size:12px;padding:10px 12px;border-radius:8px;margin-bottom:14px;display:none}
+.form-msg.show{display:block}
+.form-msg.error{background:rgba(252,108,143,0.1);border:1px solid rgba(252,108,143,0.2);color:var(--error)}
+.form-msg.success{background:rgba(108,252,184,0.1);border:1px solid rgba(108,252,184,0.2);color:var(--accent3)}
+.form-msg.info{background:rgba(124,108,252,0.1);border:1px solid rgba(124,108,252,0.2);color:var(--accent)}
+
+/* ── Loading spinner ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+
+/* ── Email sent state ── */
+.email-sent{text-align:center;padding:16px 0}
+.email-sent-icon{font-size:42px;margin-bottom:12px}
+.email-sent h3{font-family:var(--display);font-size:20px;font-weight:800;margin-bottom:8px}
+.email-sent p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.email-sent .email-highlight{color:var(--accent);font-weight:600}
+
+/* ── Password strength ── */
+.pw-strength{margin-top:6px;display:flex;gap:4px;height:3px}
+.pw-bar{flex:1;border-radius:99px;background:var(--border);transition:background 0.3s}
+.pw-bar.weak{background:var(--error)}
+.pw-bar.ok{background:var(--gold)}
+.pw-bar.strong{background:var(--accent3)}
+.pw-hint{font-size:11px;color:var(--muted);margin-top:5px}
+
+/* ── Checkbox ── */
+.terms-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px}
+.terms-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;cursor:pointer;appearance:none;-webkit-appearance:none;background:var(--surface2);margin-top:1px;transition:all 0.2s}
+.terms-check:checked{background:var(--accent);border-color:var(--accent)}
+.terms-check:checked::after{content:'✓';display:block;text-align:center;font-size:11px;color:#fff;font-weight:700;line-height:1.5}
+.terms-lbl{font-size:12px;color:var(--muted);line-height:1.5}
+
+@media(max-width:480px){
+  .auth-card{padding:28px 20px;border-radius:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<a href="landing.html" class="back-link">← Back to home</a>
+
+<div class="auth-card">
+  <div class="auth-logo">QUEST<span>LOG</span></div>
+
+  <!-- Tabs -->
+  <div class="auth-tabs" id="authTabs">
+    <button class="auth-tab active" id="tabSignin" onclick="showTab('signin')">Sign In</button>
+    <button class="auth-tab" id="tabSignup" onclick="showTab('signup')">Sign Up</button>
+  </div>
+
+  <!-- ── SIGN IN FORM ── -->
+  <div class="auth-form active" id="formSignin">
+    <div class="form-msg" id="signinMsg"></div>
+    <div class="form-group">
+      <label class="form-label" for="signinEmail">Email</label>
+      <input class="form-input" type="email" id="signinEmail" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="signinPw">Password</label>
+      <div class="pw-wrap">
+        <input class="form-input" type="password" id="signinPw" placeholder="••••••••" autocomplete="current-password">
+        <button class="pw-toggle" type="button" onclick="togglePw('signinPw', this)" title="Show/hide password">👁</button>
+      </div>
+    </div>
+    <div class="forgot-link"><a href="#" onclick="showForgot(); return false;">Forgot password?</a></div>
+    <button class="btn-submit" id="btnSignin" onclick="handleSignin()">
+      Enter Your Quest
+    </button>
+    <div class="oauth-divider">or continue with</div>
+    <div class="oauth-row">
+      <button class="btn-oauth" onclick="handleOAuth('google')">
+        <svg class="oauth-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Google
+      </button>
+      <button class="btn-oauth" onclick="handleOAuth('github')">
+        <svg class="oauth-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub
+      </button>
+    </div>
+    <div class="switch-mode">Don't have an account? <a href="#" onclick="showTab('signup'); return false;">Sign up free</a></div>
+  </div>
+
+  <!-- ── SIGN UP FORM ── -->
+  <div class="auth-form" id="formSignup">
+    <div class="form-msg" id="signupMsg"></div>
+    <div class="form-group">
+      <label class="form-label" for="signupName">Hero Name</label>
+      <input class="form-input" type="text" id="signupName" placeholder="What shall we call you?" autocomplete="name" maxlength="30">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="signupEmail">Email</label>
+      <input class="form-input" type="email" id="signupEmail" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="signupPw">Password</label>
+      <div class="pw-wrap">
+        <input class="form-input" type="password" id="signupPw" placeholder="Min. 8 characters" autocomplete="new-password" oninput="checkStrength(this.value)">
+        <button class="pw-toggle" type="button" onclick="togglePw('signupPw', this)" title="Show/hide password">👁</button>
+      </div>
+      <div class="pw-strength">
+        <div class="pw-bar" id="bar0"></div>
+        <div class="pw-bar" id="bar1"></div>
+        <div class="pw-bar" id="bar2"></div>
+        <div class="pw-bar" id="bar3"></div>
+      </div>
+      <div class="pw-hint" id="pwHint">Use 8+ characters with letters and numbers</div>
+    </div>
+    <div class="terms-row">
+      <input type="checkbox" class="terms-check" id="termsCheck">
+      <label class="terms-lbl" for="termsCheck">I'm ready to become the hero of my own story and level up my habits</label>
+    </div>
+    <button class="btn-submit" id="btnSignup" onclick="handleSignup()">
+      Create My Character
+    </button>
+    <div class="oauth-divider">or continue with</div>
+    <div class="oauth-row">
+      <button class="btn-oauth" onclick="handleOAuth('google')">
+        <svg class="oauth-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Google
+      </button>
+      <button class="btn-oauth" onclick="handleOAuth('github')">
+        <svg class="oauth-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub
+      </button>
+    </div>
+    <div class="switch-mode">Already have an account? <a href="#" onclick="showTab('signin'); return false;">Sign in</a></div>
+  </div>
+
+  <!-- ── FORGOT PASSWORD FORM ── -->
+  <div class="auth-form" id="formForgot">
+    <div style="margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">Reset Your Password</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.5">Enter your email and we'll send you a link to reset your password.</div>
+    </div>
+    <div class="form-msg" id="forgotMsg"></div>
+    <div class="form-group">
+      <label class="form-label" for="forgotEmail">Email</label>
+      <input class="form-input" type="email" id="forgotEmail" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <button class="btn-submit" id="btnForgot" onclick="handleForgot()">
+      Send Reset Link
+    </button>
+    <div class="switch-mode" style="margin-top:16px"><a href="#" onclick="showTab('signin'); return false;">← Back to Sign In</a></div>
+  </div>
+
+  <!-- ── EMAIL SENT STATE ── -->
+  <div class="auth-form" id="formEmailSent">
+    <div class="email-sent">
+      <div class="email-sent-icon">✉️</div>
+      <h3>Check Your Email</h3>
+      <p>We sent a verification link to<br><span class="email-highlight" id="sentEmailDisplay">your email</span></p>
+      <p style="font-size:12px;color:var(--muted)">Click the link in the email to activate your account, then come back and sign in.</p>
+    </div>
+    <button class="btn-submit" id="btnResend" onclick="handleResend()" style="margin-top:8px">
+      Resend Email
+    </button>
+    <div class="switch-mode" style="margin-top:16px"><a href="#" onclick="showTab('signin'); return false;">← Back to Sign In</a></div>
+  </div>
+
+  <!-- ── RESET SENT STATE ── -->
+  <div class="auth-form" id="formResetSent">
+    <div class="email-sent">
+      <div class="email-sent-icon">🔑</div>
+      <h3>Reset Link Sent</h3>
+      <p>Check your inbox at<br><span class="email-highlight" id="resetEmailDisplay">your email</span></p>
+      <p style="font-size:12px;color:var(--muted)">Follow the link in the email to set a new password.</p>
+    </div>
+    <div class="switch-mode" style="margin-top:20px"><a href="#" onclick="showTab('signin'); return false;">← Back to Sign In</a></div>
+  </div>
+
+</div><!-- end .auth-card -->
+
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://dmehwmnnplzxmjazgyun.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Fs7rxMuHLz1SzZj1iB_xuw_jhwX6lYF';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── READ MODE FROM URL ──────────────────────────────────────
+const urlParams = new URLSearchParams(window.location.search);
+const initMode = urlParams.get('mode');
+if (initMode === 'signup') showTab('signup');
+else if (initMode === 'forgot') showForgot();
+
+// ── CHECK IF ALREADY SIGNED IN ──────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    window.location.href = 'index.html';
+  }
+})();
+
+// Listen for OAuth / email-link callbacks
+sb.auth.onAuthStateChange((event, session) => {
+  if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+    window.location.href = 'index.html';
+  }
+});
+
+// ── TAB SWITCHING ───────────────────────────────────────────
+function showTab(tab) {
+  ['signin','signup','forgot','emailSent','resetSent'].forEach(t => {
+    document.getElementById('form' + capitalise(t)).classList.remove('active');
+  });
+  // Update tab buttons
+  document.getElementById('authTabs').style.display = (tab === 'forgot' || tab === 'emailSent' || tab === 'resetSent') ? 'none' : 'flex';
+  document.getElementById('tabSignin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+
+  const formId = 'form' + capitalise(tab);
+  const el = document.getElementById(formId);
+  if (el) el.classList.add('active');
+  clearMessages();
+}
+
+function showForgot() {
+  showTab('forgot');
+}
+
+function capitalise(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function clearMessages() {
+  document.querySelectorAll('.form-msg').forEach(el => {
+    el.classList.remove('show','error','success','info');
+    el.textContent = '';
+  });
+}
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'form-msg show ' + type;
+}
+
+// ── PASSWORD VISIBILITY ─────────────────────────────────────
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+// ── PASSWORD STRENGTH ───────────────────────────────────────
+function checkStrength(pw) {
+  const bars = [0,1,2,3].map(i => document.getElementById('bar' + i));
+  const hint = document.getElementById('pwHint');
+  bars.forEach(b => { b.className = 'pw-bar'; });
+
+  if (!pw) { hint.textContent = 'Use 8+ characters with letters and numbers'; return; }
+
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  const cls = score <= 1 ? 'weak' : score <= 2 ? 'ok' : 'strong';
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+  for (let i = 0; i < score; i++) bars[i].classList.add(cls);
+  hint.textContent = score === 4 ? '✓ Strong password' : score <= 1 ? 'Add uppercase, numbers, symbols' : score <= 2 ? 'Getting better — add more variety' : 'Good password';
+}
+
+// ── SET BUTTON LOADING STATE ────────────────────────────────
+function setBtnLoading(id, loading, text) {
+  const btn = document.getElementById(id);
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<div class="spinner"></div>'
+    : text;
+}
+
+// ── SIGN IN ─────────────────────────────────────────────────
+async function handleSignin() {
+  const email = document.getElementById('signinEmail').value.trim();
+  const pw    = document.getElementById('signinPw').value;
+  clearMessages();
+
+  if (!email || !pw) {
+    showMsg('signinMsg', 'Please fill in all fields.', 'error');
+    return;
+  }
+
+  setBtnLoading('btnSignin', true);
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  setBtnLoading('btnSignin', false, 'Enter Your Quest');
+
+  if (error) {
+    const msg = error.message.includes('Invalid') ? 'Incorrect email or password.' :
+                error.message.includes('Email not confirmed') ? 'Please verify your email first. Check your inbox.' :
+                error.message;
+    showMsg('signinMsg', msg, 'error');
+  }
+  // Success handled by onAuthStateChange → redirect
+}
+
+// ── SIGN UP ─────────────────────────────────────────────────
+async function handleSignup() {
+  const name  = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pw    = document.getElementById('signupPw').value;
+  const terms = document.getElementById('termsCheck').checked;
+  clearMessages();
+
+  if (!name)  { showMsg('signupMsg', 'Please enter your hero name.', 'error'); return; }
+  if (!email) { showMsg('signupMsg', 'Please enter your email.', 'error'); return; }
+  if (pw.length < 8) { showMsg('signupMsg', 'Password must be at least 8 characters.', 'error'); return; }
+  if (!terms) { showMsg('signupMsg', 'You must accept the terms to begin your quest.', 'error'); return; }
+
+  setBtnLoading('btnSignup', true);
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password: pw,
+    options: {
+      data: { display_name: name },
+      emailRedirectTo: window.location.origin + (window.location.pathname.replace('auth.html', 'auth.html'))
+    }
+  });
+  setBtnLoading('btnSignup', false, 'Create My Character');
+
+  if (error) {
+    const msg = error.message.includes('already registered') ? 'This email is already in use. Try signing in.' : error.message;
+    showMsg('signupMsg', msg, 'error');
+    return;
+  }
+
+  // Show email verification state
+  document.getElementById('sentEmailDisplay').textContent = email;
+  showTab('emailSent');
+  document.getElementById('authTabs').style.display = 'none';
+}
+
+// ── RESEND VERIFICATION ─────────────────────────────────────
+let lastResendEmail = '';
+async function handleResend() {
+  const email = document.getElementById('sentEmailDisplay').textContent;
+  if (!email || email === 'your email') return;
+  setBtnLoading('btnResend', true);
+  await sb.auth.resend({ type: 'signup', email });
+  setBtnLoading('btnResend', false, 'Resend Email');
+  showMsg('forgotMsg', 'Email resent! Check your inbox.', 'success');
+}
+
+// ── FORGOT PASSWORD ─────────────────────────────────────────
+async function handleForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  clearMessages();
+
+  if (!email) { showMsg('forgotMsg', 'Please enter your email.', 'error'); return; }
+
+  setBtnLoading('btnForgot', true);
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  setBtnLoading('btnForgot', false, 'Send Reset Link');
+
+  if (error) {
+    showMsg('forgotMsg', error.message, 'error');
+    return;
+  }
+
+  document.getElementById('resetEmailDisplay').textContent = email;
+  showTab('resetSent');
+  document.getElementById('authTabs').style.display = 'none';
+}
+
+// ── OAUTH ───────────────────────────────────────────────────
+async function handleOAuth(provider) {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: window.location.origin + '/auth.html'
+    }
+  });
+  if (error) showMsg('signinMsg', error.message, 'error');
+}
+
+// ── ENTER KEY SUPPORT ───────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const active = document.querySelector('.auth-form.active');
+  if (!active) return;
+  const id = active.id;
+  if (id === 'formSignin')  handleSignin();
+  else if (id === 'formSignup')  handleSignup();
+  else if (id === 'formForgot')  handleForgot();
+});
+</script>
+</body>
+</html>
