@@ -389,6 +389,7 @@ async function boot() {
     startCountdown();
     renderAll();
     setLoading(null);
+    syncCompletionState();
   } catch(e) {
     setLoading('Connection error — working offline');
     setSyncState('error', 'Offline');
@@ -519,6 +520,7 @@ async function toggleTask(e, taskId, el) {
 
   setSyncState('live', 'Live sync');
   saveToCache();
+  syncCompletionState();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -814,9 +816,59 @@ function loadFromCache() {
 // ═══════════════════════════════════════════════════════════
 // SERVICE WORKER REGISTRATION (push notifications)
 // ═══════════════════════════════════════════════════════════
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+// ═══════════════════════════════════════════════════════════
+// SERVICE WORKER + SMART NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+let swReg = null;
+
+async function initServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    swReg = await navigator.serviceWorker.register('sw.js');
+    console.log('SW registered');
+
+    // Request notification permission automatically on first install
+    await requestNotificationPermission();
+
+  } catch(e) {
+    console.warn('SW registration failed:', e);
+  }
 }
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+
+  if (Notification.permission === 'default') {
+    // Ask for permission — must come from a page interaction or load
+    const result = await Notification.requestPermission();
+    if (result === 'granted') {
+      notifyServiceWorker({ type: 'PERMISSION_GRANTED' });
+      showToast('🔔 Reminders enabled! We\'ll keep you on track.');
+    }
+  } else if (Notification.permission === 'granted') {
+    notifyServiceWorker({ type: 'PERMISSION_GRANTED' });
+  }
+}
+
+function notifyServiceWorker(msg) {
+  if (!swReg || !swReg.active) return;
+  swReg.active.postMessage(msg);
+}
+
+// Called every time a task is toggled — keeps SW in sync with real state
+function syncCompletionState() {
+  const allDailyDone  = tasks.daily.length > 0  && tasks.daily.every(t  => todayCompletions.has(t.id));
+  const allWeeklyDone = tasks.weekly.length > 0 && tasks.weekly.every(t => todayCompletions.has(t.id));
+  const dailyRemaining  = tasks.daily.filter(t  => !todayCompletions.has(t.id)).length;
+  const weeklyRemaining = tasks.weekly.filter(t => !todayCompletions.has(t.id)).length;
+
+  notifyServiceWorker({
+    type: 'COMPLETION_UPDATE',
+    payload: { allDailyDone, allWeeklyDone, dailyRemaining, weeklyRemaining }
+  });
+}
+
+initServiceWorker();
 
 // ═══════════════════════════════════════════════════════════
 // START
