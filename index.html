@@ -89,8 +89,12 @@
     <!-- Streak -->
     <div class="streak-banner">
       <div class="streak-fire">🔥</div>
-      <div>
-        <div><span class="streak-count" id="streakCount">0</span> <span style="font-size:14px;font-weight:600">day streak</span></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center">
+          <span class="streak-count" id="streakCount">0</span>
+          <span style="font-size:14px;font-weight:600;margin-left:4px">day streak</span>
+          <span class="streak-shield" id="streakShield" style="display:none">🛡️ <span id="shieldCount">0</span></span>
+        </div>
         <div class="streak-sub" id="streakMsg">Complete all dailies to start your streak!</div>
       </div>
     </div>
@@ -155,6 +159,13 @@
         </div>
       </div>
       <div id="list-backlog"></div>
+      <!-- Completed backlog accordion -->
+      <div class="archive-toggle" id="archiveToggle" onclick="toggleArchive()" style="display:none">
+        <span class="archive-toggle-icon">📦</span>
+        <span>Completed <span id="archiveCount">0</span></span>
+        <span class="archive-chevron" id="archiveChevron">▼</span>
+      </div>
+      <div id="archiveList" style="display:none"></div>
     </div>
   </div>
 
@@ -183,9 +194,48 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">🏆 Active Goals</div>
+        <button class="add-btn" onclick="openGoalModal()" title="Add goal">+</button>
       </div>
       <div id="goalsList"></div>
     </div>
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div class="tab-pane" id="pane-calendar">
+    <div class="section">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()">◀</button>
+        <div class="cal-month-label" id="calMonthLabel"></div>
+        <button class="cal-nav-btn" onclick="calNext()">▶</button>
+      </div>
+      <div class="cal-weekdays">
+        <div class="cal-weekday">Sun</div><div class="cal-weekday">Mon</div>
+        <div class="cal-weekday">Tue</div><div class="cal-weekday">Wed</div>
+        <div class="cal-weekday">Thu</div><div class="cal-weekday">Fri</div>
+        <div class="cal-weekday">Sat</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-detail" id="calDetail">
+        <div class="cal-detail-title" id="calDetailTitle"></div>
+        <div id="calDetailItems"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD TAB -->
+  <div class="tab-pane" id="pane-leaderboard">
+    <div class="leaderboard-toggle-row">
+      <div>
+        <div class="leaderboard-toggle-label">Show me on leaderboard</div>
+        <div class="leaderboard-toggle-sub">Let others see your level &amp; streak</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="lbToggle" onchange="toggleLeaderboard(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="section-title" style="margin-bottom:10px">🏅 Top Adventurers</div>
+    <div id="leaderboardList"><div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Loading leaderboard...</div></div>
   </div>
 
   <!-- REWARDS TAB -->
@@ -248,14 +298,20 @@
   <div class="tab-btn active" id="tab-today" onclick="switchTab('today')">
     <div class="tab-icon">⚡</div><div class="tab-lbl">Today</div>
   </div>
-  <div class="tab-btn" id="tab-stats" onclick="switchTab('stats')">
-    <div class="tab-icon">📊</div><div class="tab-lbl">Stats</div>
-  </div>
   <div class="tab-btn" id="tab-goals" onclick="switchTab('goals')">
     <div class="tab-icon">🏆</div><div class="tab-lbl">Goals</div>
   </div>
+  <div class="tab-btn" id="tab-calendar" onclick="switchTab('calendar')">
+    <div class="tab-icon">📅</div><div class="tab-lbl">Calendar</div>
+  </div>
   <div class="tab-btn" id="tab-rewards" onclick="switchTab('rewards')">
     <div class="tab-icon">🎁</div><div class="tab-lbl">Rewards</div>
+  </div>
+  <div class="tab-btn" id="tab-leaderboard" onclick="switchTab('leaderboard')">
+    <div class="tab-icon">🏅</div><div class="tab-lbl">Rank</div>
+  </div>
+  <div class="tab-btn" id="tab-stats" onclick="switchTab('stats')">
+    <div class="tab-icon">📊</div><div class="tab-lbl">Stats</div>
   </div>
   <div class="tab-btn" id="tab-admin" onclick="switchTab('admin')" style="display:none">
     <div class="tab-icon">👑</div><div class="tab-lbl">Admin</div>
@@ -316,6 +372,68 @@
 
     <button class="modal-btn primary" id="saveTaskBtn" onclick="saveTask()">Save Task</button>
     <button class="modal-btn ghost" onclick="closeTaskModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Goal Add/Edit Modal -->
+<div class="modal-overlay" id="goalModalOverlay" onclick="closeGoalModal(event)">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="goalModalTitle">Add Goal</div>
+
+    <label class="modal-field-label">Goal Title</label>
+    <input class="modal-input" type="text" id="goalTitle" placeholder="What do you want to achieve?" maxlength="80">
+
+    <label class="modal-field-label">Description <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(optional)</span></label>
+    <input class="modal-input" type="text" id="goalDesc" placeholder="Details..." maxlength="200">
+
+    <div class="modal-row">
+      <div class="modal-row-item">
+        <label class="modal-field-label">Category</label>
+        <select class="modal-select" id="goalCat" style="margin-bottom:0">
+          <option value="personal">Personal</option>
+          <option value="health">Health</option>
+          <option value="career">Career</option>
+          <option value="learning">Learning</option>
+          <option value="finance">Finance</option>
+          <option value="social">Social</option>
+        </select>
+      </div>
+      <div class="modal-row-item">
+        <label class="modal-field-label">Time Horizon</label>
+        <select class="modal-select" id="goalHorizon" style="margin-bottom:0">
+          <option value="weekly">Weekly</option>
+          <option value="monthly" selected>Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="modal-field-label">Difficulty</label>
+    <div class="diff-picker" id="goalDiffPicker">
+      <button class="diff-btn" data-diff="easy" onclick="selectGoalDiff('easy')">⚡ Easy</button>
+      <button class="diff-btn active" data-diff="med" onclick="selectGoalDiff('med')">⚔️ Med</button>
+      <button class="diff-btn" data-diff="hard" onclick="selectGoalDiff('hard')">💀 Hard</button>
+      <button class="diff-btn" data-diff="epic" onclick="selectGoalDiff('epic')">🌟 Epic</button>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-row-item">
+        <label class="modal-field-label">XP Reward</label>
+        <input class="modal-input modal-input-sm" type="number" id="goalXP" min="1" max="9999" placeholder="500">
+      </div>
+      <div class="modal-row-item">
+        <label class="modal-field-label">Gold Reward</label>
+        <input class="modal-input modal-input-sm" type="number" id="goalGold" min="1" max="9999" placeholder="250">
+      </div>
+    </div>
+
+    <label class="modal-field-label">Deadline <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(optional)</span></label>
+    <input class="modal-input" type="date" id="goalDeadline">
+
+    <button class="modal-btn primary" id="saveGoalBtn" onclick="saveGoal()">Save Goal</button>
+    <button class="modal-btn ghost" onclick="closeGoalModal()">Cancel</button>
   </div>
 </div>
 
