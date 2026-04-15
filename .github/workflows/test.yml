@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pull-requests: write  # needed to post PR comments
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -22,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run coverage -- --reporter=verbose --reporter=json --outputFile=coverage/coverage-summary.json
+        run: npm run coverage -- --reporter=verbose --coverage.reporter=json-summary
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-anon-key-for-ci
@@ -43,6 +47,7 @@ jobs:
             const fs = require('fs')
             let body = '## 🧪 Test Coverage\n\n'
             try {
+              // Vitest json-summary writes to coverage/coverage-summary.json
               const raw = fs.readFileSync('coverage/coverage-summary.json', 'utf8')
               const cov = JSON.parse(raw)
               const t = cov.total
@@ -51,10 +56,10 @@ jobs:
               body += `| Functions  | ${t.functions.pct}% (${t.functions.covered}/${t.functions.total}) |\n`
               body += `| Branches   | ${t.branches.pct}% (${t.branches.covered}/${t.branches.total}) |\n`
               body += `| Statements | ${t.statements.pct}% |\n\n`
-              body += `> utils.js (pure functions): ~98% coverage ✅\n`
-              body += `> main.js: add DOM tests to increase coverage`
+              body += `> \`utils.js\` (pure functions): ~98% ✅\n`
+              body += `> \`main.js\`: add DOM tests to increase overall coverage`
             } catch(e) {
-              body += '_Coverage data not available._'
+              body += `_Coverage data not available (${e.message})._`
             }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
