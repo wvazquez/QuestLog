@@ -2,7 +2,7 @@ import './styles/app.css'
 import { sb, SUPABASE_URL } from './lib/supabase.js'
 import {
   xpForLevel, getCharLevel, getCharTitle, getStreakMultiplier,
-  escapeHtml, todayStr, formatDate, CHAR_TITLES,
+  escapeHtml, todayStr,
 } from './lib/utils.js'
 
 // ═══════════════════════════════════════════════════════════
