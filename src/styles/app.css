@@ -90,6 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .pill-p1{background:rgba(252,108,143,0.15);color:var(--accent2)}
 .pill-p2{background:rgba(252,204,108,0.12);color:var(--gold)}
 .pill-p3{background:rgba(124,108,252,0.12);color:var(--accent)}
+.pill-p4{background:rgba(107,107,138,0.12);color:var(--muted)}
 .diff-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .diff-easy{background:var(--accent3)}.diff-med{background:var(--gold)}.diff-hard{background:var(--accent2)}
 
@@ -105,10 +106,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 /* ── Tabbar ── */
 .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(18,18,26,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 env(safe-area-inset-bottom,10px);display:flex;justify-content:space-around;z-index:100}
-.tab-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 20px;cursor:pointer;opacity:0.38;transition:opacity 0.2s}
+.tab-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 10px;cursor:pointer;opacity:0.38;transition:opacity 0.2s;flex:1;min-width:0}
 .tab-btn.active{opacity:1}
 .tab-icon{font-size:19px;line-height:1}
-.tab-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em}
+.tab-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap}
 
 /* ── Tab content ── */
 .tab-pane{display:none}.tab-pane.active{display:block}
@@ -195,3 +196,171 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .admin-stat{font-size:11px;color:var(--muted)}
 .admin-stat strong{color:var(--text);font-weight:600}
 .admin-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(252,204,108,0.14);color:var(--gold);margin-left:6px}
+
+/* ── Add task button ── */
+.add-btn{width:26px;height:26px;border-radius:8px;background:rgba(124,108,252,0.15);border:1px solid rgba(124,108,252,0.3);color:var(--accent);font-size:18px;font-weight:400;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.15s;flex-shrink:0}
+.add-btn:hover{background:rgba(124,108,252,0.28);transform:scale(1.1)}
+
+/* ── Task action buttons (edit / delete) ── */
+.task-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s;flex-shrink:0}
+.task:hover .task-actions{opacity:1}
+.task-action-btn{width:26px;height:26px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background 0.15s;color:var(--muted)}
+.task-action-btn:hover{background:var(--surface2);color:var(--text)}
+.task-action-btn.danger:hover{background:rgba(252,108,143,0.12);color:var(--accent2)}
+
+/* ── Delete confirm inline ── */
+.task-del-confirm{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent2);font-weight:600}
+.task-del-confirm button{padding:2px 8px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font)}
+.task-del-yes{background:rgba(252,108,143,0.15);color:var(--accent2)}
+.task-del-no{background:var(--surface2);color:var(--muted)}
+
+/* ── Task modal extras ── */
+.modal-field-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:8px}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.modal-row-item{}
+.modal-input-sm{margin-bottom:0}
+
+/* ── Difficulty picker ── */
+.diff-picker{display:flex;gap:6px;margin-bottom:14px}
+.diff-btn{flex:1;padding:8px 4px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center}
+.diff-btn.active[data-diff="easy"]{background:rgba(108,252,184,0.12);border-color:rgba(108,252,184,0.4);color:var(--accent3)}
+.diff-btn.active[data-diff="med"]{background:rgba(252,204,108,0.12);border-color:rgba(252,204,108,0.4);color:var(--gold)}
+.diff-btn.active[data-diff="hard"]{background:rgba(252,108,143,0.12);border-color:rgba(252,108,143,0.4);color:var(--accent2)}
+
+/* ── Day picker ── */
+.day-picker{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.day-btn{display:flex;align-items:center;justify-content:center}
+.day-btn input[type="checkbox"]{display:none}
+.day-btn span{display:block;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;min-width:36px;text-align:center}
+.day-btn input:checked + span{background:rgba(124,108,252,0.18);border-color:rgba(124,108,252,0.5);color:var(--accent)}
+
+/* ── Priority picker ── */
+.priority-picker{display:flex;gap:6px;margin-bottom:14px}
+.priority-btn{flex:1;padding:8px 4px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.priority-btn.active[data-p="P1"]{background:rgba(252,108,143,0.12);border-color:rgba(252,108,143,0.4);color:var(--accent2)}
+.priority-btn.active[data-p="P2"]{background:rgba(252,204,108,0.12);border-color:rgba(252,204,108,0.4);color:var(--gold)}
+.priority-btn.active[data-p="P3"]{background:rgba(124,108,252,0.12);border-color:rgba(124,108,252,0.4);color:var(--accent)}
+.priority-btn.active[data-p="P4"]{background:rgba(18,18,26,0.5);border-color:var(--border);color:var(--muted)}
+
+/* ══════════════════════════════════════════════════════════
+   PHASE 2 — Backlog Archive
+   ══════════════════════════════════════════════════════════ */
+.archive-toggle{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-top:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:border-color 0.2s,color 0.2s;user-select:none}
+.archive-toggle:hover{border-color:rgba(124,108,252,0.3);color:var(--text)}
+.archive-toggle-icon{font-size:15px}
+.archive-chevron{margin-left:auto;font-size:11px;transition:transform 0.2s}
+.archive-chevron.open{transform:rotate(180deg)}
+.archive-month-header{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:12px 4px 6px;display:flex;align-items:center;gap:8px}
+.archive-month-count{background:var(--surface2);border-radius:99px;padding:2px 8px;font-size:11px}
+.archive-task{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;opacity:0.7}
+.archive-task-check{width:22px;height:22px;border-radius:7px;background:var(--accent3);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.archive-task-body{flex:1;min-width:0}
+.archive-task-name{font-size:13px;font-weight:600;text-decoration:line-through;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ══════════════════════════════════════════════════════════
+   PHASE 3 — Streak Shield
+   ══════════════════════════════════════════════════════════ */
+.streak-shield{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);background:rgba(124,108,252,0.12);border:1px solid rgba(124,108,252,0.3);border-radius:8px;padding:3px 8px;margin-left:8px;cursor:default}
+
+/* ══════════════════════════════════════════════════════════
+   PHASE 5 — XP / Level redesign
+   ══════════════════════════════════════════════════════════ */
+.levelup-flash{position:fixed;inset:0;z-index:9999;pointer-events:none;display:flex;align-items:center;justify-content:center;animation:levelup-anim 1.2s ease-out forwards}
+@keyframes levelup-anim{0%{background:rgba(124,108,252,0.35);opacity:1}100%{background:transparent;opacity:0}}
+.levelup-text{font-family:var(--display);font-size:42px;font-weight:800;color:#fff;text-shadow:0 0 40px rgba(124,108,252,0.8);animation:levelup-pop 1.2s ease-out forwards;text-align:center;line-height:1.2}
+@keyframes levelup-pop{0%{transform:scale(0.5);opacity:0}20%{transform:scale(1.15);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0.95);opacity:0}}
+
+/* ══════════════════════════════════════════════════════════
+   PHASE 4 — Goal System Redesign
+   ══════════════════════════════════════════════════════════ */
+.goals-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden}
+.goal-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.goal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.goal-title{font-size:15px;font-weight:700;flex:1;min-width:0}
+.goal-actions{display:flex;gap:4px;flex-shrink:0}
+.goal-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.goal-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em}
+.goal-badge.cat{background:rgba(124,108,252,0.12);color:var(--accent);border:1px solid rgba(124,108,252,0.25)}
+.goal-badge.diff-easy{background:rgba(108,252,184,0.12);color:var(--accent3);border:1px solid rgba(108,252,184,0.25)}
+.goal-badge.diff-med{background:rgba(252,204,108,0.12);color:var(--gold);border:1px solid rgba(252,204,108,0.25)}
+.goal-badge.diff-hard{background:rgba(252,108,143,0.12);color:var(--accent2);border:1px solid rgba(252,108,143,0.25)}
+.goal-badge.diff-epic{background:rgba(124,108,252,0.2);color:var(--accent);border:1px solid rgba(124,108,252,0.4)}
+.goal-badge.horizon{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.goal-desc{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5}
+.goal-bar{height:4px;background:var(--border);border-radius:99px;margin:8px 0}
+.goal-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width 0.5s}
+.goal-footer{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.goal-rewards{display:flex;gap:8px;margin-top:8px}
+.goal-reward-pill{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px}
+.goal-reward-pill.xp{background:rgba(124,108,252,0.1);color:var(--accent)}
+.goal-reward-pill.gold{background:rgba(252,204,108,0.1);color:var(--gold)}
+/* Subtasks inside goal card */
+.goal-subtasks{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.goal-subtask-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.subtask-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:var(--muted)}
+.subtask-row.done{text-decoration:line-through;opacity:0.6}
+.subtask-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0}
+.subtask-row.done .subtask-dot{background:var(--accent3)}
+/* Goal modal extras */
+.modal-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s;margin-bottom:14px;appearance:none}
+.modal-select:focus{border-color:var(--accent)}
+.goal-complete-btn{width:100%;background:linear-gradient(135deg,var(--accent3),#4db8a0);border:none;color:var(--bg);padding:11px;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;transition:opacity 0.2s}
+.goal-complete-btn:hover{opacity:0.88}
+
+/* ══════════════════════════════════════════════════════════
+   PHASE 6 — Calendar View
+   ══════════════════════════════════════════════════════════ */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-nav-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:border-color 0.2s}
+.cal-nav-btn:hover{border-color:var(--accent)}
+.cal-month-label{font-family:var(--display);font-size:18px;font-weight:800}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-weekday{text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-day{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 4px;min-height:56px;cursor:pointer;transition:border-color 0.2s;position:relative}
+.cal-day:hover{border-color:rgba(124,108,252,0.4)}
+.cal-day.today{border-color:var(--accent);background:rgba(124,108,252,0.07)}
+.cal-day.other-month{opacity:0.35}
+.cal-day.has-events{cursor:pointer}
+.cal-day-num{font-size:12px;font-weight:600;text-align:center;margin-bottom:4px;line-height:1}
+.cal-day.today .cal-day-num{color:var(--accent)}
+.cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.cal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.cal-dot.daily{background:var(--accent)}
+.cal-dot.weekly{background:var(--accent3)}
+.cal-dot.goal{background:var(--gold)}
+/* Day detail panel */
+.cal-detail{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:12px;display:none}
+.cal-detail.open{display:block}
+.cal-detail-title{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--muted)}
+.cal-detail-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.cal-detail-item:last-child{border-bottom:none}
+.cal-detail-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ══════════════════════════════════════════════════════════
+   PHASE 7 — Leaderboard
+   ══════════════════════════════════════════════════════════ */
+.leaderboard-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.leaderboard-toggle-label{font-size:13px;font-weight:600}
+.leaderboard-toggle-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;cursor:pointer;transition:background 0.2s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform 0.2s}
+.toggle-switch input:checked + .toggle-slider{background:var(--accent)}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(18px)}
+.leaderboard-table{width:100%;border-collapse:collapse}
+.leaderboard-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;transition:border-color 0.2s}
+.leaderboard-row.me{border-color:var(--accent);background:rgba(124,108,252,0.05)}
+.lb-rank{font-family:var(--display);font-size:16px;font-weight:800;width:28px;text-align:center;flex-shrink:0;color:var(--muted)}
+.lb-rank.top1{color:var(--gold)}
+.lb-rank.top2{color:#c0c0c0}
+.lb-rank.top3{color:#cd7f32}
+.lb-avatar{font-size:22px;flex-shrink:0}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.lb-stats{display:flex;gap:12px;flex-shrink:0;text-align:right}
+.lb-stat{font-size:12px;color:var(--muted)}
+.lb-stat strong{display:block;font-size:14px;font-weight:700;color:var(--text)}
