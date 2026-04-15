@@ -125,7 +125,10 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">⚡ Daily Habits</div>
-        <div class="section-count" id="count-daily">0/0</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="section-count" id="count-daily">0/0</div>
+          <button class="add-btn" onclick="openTaskModal('daily')" title="Add daily habit">+</button>
+        </div>
       </div>
       <div id="list-daily"></div>
     </div>
@@ -134,7 +137,10 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">📅 Weekly Routines</div>
-        <div class="section-count" id="count-weekly">0/0</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="section-count" id="count-weekly">0/0</div>
+          <button class="add-btn" onclick="openTaskModal('weekly')" title="Add weekly routine">+</button>
+        </div>
       </div>
       <div id="list-weekly"></div>
     </div>
@@ -143,7 +149,10 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">🎯 Backlog</div>
-        <div class="section-count" id="count-backlog">0/0</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="section-count" id="count-backlog">0/0</div>
+          <button class="add-btn" onclick="openTaskModal('backlog')" title="Add backlog task">+</button>
+        </div>
       </div>
       <div id="list-backlog"></div>
     </div>
@@ -250,6 +259,63 @@
   </div>
   <div class="tab-btn" id="tab-admin" onclick="switchTab('admin')" style="display:none">
     <div class="tab-icon">👑</div><div class="tab-lbl">Admin</div>
+  </div>
+</div>
+
+<!-- Task Add/Edit Modal -->
+<div class="modal-overlay" id="taskModalOverlay" onclick="closeTaskModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="taskModalTitle">Add Task</div>
+
+    <label class="modal-field-label">Task Name</label>
+    <input class="modal-input" type="text" id="taskName" placeholder="What's your quest?" maxlength="60">
+
+    <label class="modal-field-label">Difficulty</label>
+    <div class="diff-picker" id="diffPicker">
+      <button class="diff-btn" data-diff="easy" onclick="selectDiff('easy')">⚡ Easy</button>
+      <button class="diff-btn active" data-diff="med"  onclick="selectDiff('med')">⚔️ Medium</button>
+      <button class="diff-btn" data-diff="hard" onclick="selectDiff('hard')">💀 Hard</button>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-row-item">
+        <label class="modal-field-label">XP Reward</label>
+        <input class="modal-input modal-input-sm" type="number" id="taskXP" min="1" max="999" placeholder="50">
+      </div>
+      <div class="modal-row-item">
+        <label class="modal-field-label">Gold Reward</label>
+        <input class="modal-input modal-input-sm" type="number" id="taskGold" min="1" max="999" placeholder="25">
+      </div>
+    </div>
+
+    <!-- Weekly: days of week -->
+    <div id="taskDaysSection" style="display:none">
+      <label class="modal-field-label">Repeat On <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(leave blank = every day)</span></label>
+      <div class="day-picker">
+        <label class="day-btn"><input type="checkbox" value="1"><span>Mon</span></label>
+        <label class="day-btn"><input type="checkbox" value="2"><span>Tue</span></label>
+        <label class="day-btn"><input type="checkbox" value="3"><span>Wed</span></label>
+        <label class="day-btn"><input type="checkbox" value="4"><span>Thu</span></label>
+        <label class="day-btn"><input type="checkbox" value="5"><span>Fri</span></label>
+        <label class="day-btn"><input type="checkbox" value="6"><span>Sat</span></label>
+        <label class="day-btn"><input type="checkbox" value="0"><span>Sun</span></label>
+      </div>
+    </div>
+
+    <!-- Backlog: priority -->
+    <div id="taskPrioritySection" style="display:none">
+      <label class="modal-field-label">Priority</label>
+      <div class="priority-picker" id="priorityPicker">
+        <button class="priority-btn active" data-p="P1" onclick="selectPriority('P1')">P1</button>
+        <button class="priority-btn" data-p="P2" onclick="selectPriority('P2')">P2</button>
+        <button class="priority-btn" data-p="P3" onclick="selectPriority('P3')">P3</button>
+        <button class="priority-btn" data-p="P4" onclick="selectPriority('P4')">P4</button>
+      </div>
+    </div>
+
+    <button class="modal-btn primary" id="saveTaskBtn" onclick="saveTask()">Save Task</button>
+    <button class="modal-btn ghost" onclick="closeTaskModal()">Cancel</button>
   </div>
 </div>
 

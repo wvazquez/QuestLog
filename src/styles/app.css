@@ -195,3 +195,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .admin-stat{font-size:11px;color:var(--muted)}
 .admin-stat strong{color:var(--text);font-weight:600}
 .admin-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(252,204,108,0.14);color:var(--gold);margin-left:6px}
+
+/* ── Add task button ── */
+.add-btn{width:26px;height:26px;border-radius:8px;background:rgba(124,108,252,0.15);border:1px solid rgba(124,108,252,0.3);color:var(--accent);font-size:18px;font-weight:400;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.15s;flex-shrink:0}
+.add-btn:hover{background:rgba(124,108,252,0.28);transform:scale(1.1)}
+
+/* ── Task action buttons (edit / delete) ── */
+.task-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s;flex-shrink:0}
+.task:hover .task-actions{opacity:1}
+.task-action-btn{width:26px;height:26px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background 0.15s;color:var(--muted)}
+.task-action-btn:hover{background:var(--surface2);color:var(--text)}
+.task-action-btn.danger:hover{background:rgba(252,108,143,0.12);color:var(--accent2)}
+
+/* ── Delete confirm inline ── */
+.task-del-confirm{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent2);font-weight:600}
+.task-del-confirm button{padding:2px 8px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font)}
+.task-del-yes{background:rgba(252,108,143,0.15);color:var(--accent2)}
+.task-del-no{background:var(--surface2);color:var(--muted)}
+
+/* ── Task modal extras ── */
+.modal-field-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:8px}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.modal-row-item{}
+.modal-input-sm{margin-bottom:0}
+
+/* ── Difficulty picker ── */
+.diff-picker{display:flex;gap:6px;margin-bottom:14px}
+.diff-btn{flex:1;padding:8px 4px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center}
+.diff-btn.active[data-diff="easy"]{background:rgba(108,252,184,0.12);border-color:rgba(108,252,184,0.4);color:var(--accent3)}
+.diff-btn.active[data-diff="med"]{background:rgba(252,204,108,0.12);border-color:rgba(252,204,108,0.4);color:var(--gold)}
+.diff-btn.active[data-diff="hard"]{background:rgba(252,108,143,0.12);border-color:rgba(252,108,143,0.4);color:var(--accent2)}
+
+/* ── Day picker ── */
+.day-picker{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.day-btn{display:flex;align-items:center;justify-content:center}
+.day-btn input[type="checkbox"]{display:none}
+.day-btn span{display:block;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;min-width:36px;text-align:center}
+.day-btn input:checked + span{background:rgba(124,108,252,0.18);border-color:rgba(124,108,252,0.5);color:var(--accent)}
+
+/* ── Priority picker ── */
+.priority-picker{display:flex;gap:6px;margin-bottom:14px}
+.priority-btn{flex:1;padding:8px 4px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.priority-btn.active[data-p="P1"]{background:rgba(252,108,143,0.12);border-color:rgba(252,108,143,0.4);color:var(--accent2)}
+.priority-btn.active[data-p="P2"]{background:rgba(252,204,108,0.12);border-color:rgba(252,204,108,0.4);color:var(--gold)}
+.priority-btn.active[data-p="P3"]{background:rgba(124,108,252,0.12);border-color:rgba(124,108,252,0.4);color:var(--accent)}
+.priority-btn.active[data-p="P4"]{background:rgba(18,18,26,0.5);border-color:var(--border);color:var(--muted)}

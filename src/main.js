@@ -262,16 +262,43 @@ function setRing(id, pctId, pct) {
 }
 
 function renderCounts() {
+  const todayDow = new Date().getDay();
   ['daily','weekly','backlog'].forEach(cat => {
-    const done = tasks[cat].filter(t => todayCompletions.has(t.id)).length;
-    document.getElementById('count-' + cat).textContent = done + '/' + tasks[cat].length;
+    let visible = tasks[cat];
+    if (cat === 'weekly') {
+      visible = tasks[cat].filter(t =>
+        !t.days_of_week || t.days_of_week.length === 0 || t.days_of_week.includes(todayDow)
+      );
+    }
+    const done = visible.filter(t => todayCompletions.has(t.id)).length;
+    document.getElementById('count-' + cat).textContent = done + '/' + visible.length;
   });
 }
 
 function renderTaskList(cat) {
   const el = document.getElementById('list-' + cat);
   el.innerHTML = '';
-  tasks[cat].forEach(task => {
+  const todayDow = new Date().getDay(); // 0=Sun … 6=Sat
+
+  let visibleTasks = tasks[cat];
+
+  // For weekly tasks, filter by days_of_week if set
+  if (cat === 'weekly') {
+    visibleTasks = tasks[cat].filter(t => {
+      if (!t.days_of_week || t.days_of_week.length === 0) return true;
+      return t.days_of_week.includes(todayDow);
+    });
+  }
+
+  // For backlog, sort by priority (P1→P4), then created_at
+  if (cat === 'backlog') {
+    const pOrder = { P1: 1, P2: 2, P3: 3, P4: 4 };
+    visibleTasks = [...visibleTasks].sort((a, b) =>
+      (pOrder[a.priority] || 5) - (pOrder[b.priority] || 5)
+    );
+  }
+
+  visibleTasks.forEach(task => {
     const done = todayCompletions.has(task.id);
     const habit = habits[task.id] || {};
     const div = document.createElement('div');
@@ -288,8 +315,15 @@ function renderTaskList(cat) {
         </div>
       </div>
       <div class="diff-dot diff-${task.difficulty}"></div>
+      <div class="task-actions">
+        <button class="task-action-btn" title="Edit" onclick="event.stopPropagation();window.openTaskModal('${cat}',window._taskById('${task.id}'))">✏️</button>
+        <button class="task-action-btn danger" title="Delete" onclick="event.stopPropagation();window._confirmDeleteTask('${task.id}',this.closest('.task'))">🗑️</button>
+      </div>
     `;
-    div.onclick = (e) => toggleTask(e, task.id, div);
+    div.onclick = (e) => {
+      if (e.target.closest('.task-actions')) return;
+      toggleTask(e, task.id, div);
+    };
     el.appendChild(div);
   });
 }
@@ -370,6 +404,10 @@ function renderRewards() {
 // ═══════════════════════════════════════════════════════════
 function findTask(id) {
   return [...tasks.daily, ...tasks.weekly, ...tasks.backlog].find(t => t.id === id);
+}
+
+function taskById(id) {
+  return findTask(id);
 }
 
 function todayStr() {
@@ -698,6 +736,166 @@ function syncCompletionState() {
 initServiceWorker();
 
 // ═══════════════════════════════════════════════════════════
+// TASK CRUD
+// ═══════════════════════════════════════════════════════════
+const DIFF_DEFAULTS = {
+  easy: { xp: 25,  gold: 10 },
+  med:  { xp: 50,  gold: 25 },
+  hard: { xp: 100, gold: 50 },
+};
+
+let taskModalCat    = 'daily';
+let editingTaskId   = null;
+let selectedDiff    = 'med';
+let selectedPriority = 'P1';
+
+function openTaskModal(cat, task = null) {
+  taskModalCat  = cat;
+  editingTaskId = task ? task.id : null;
+
+  document.getElementById('taskModalTitle').textContent = task ? 'Edit Task' : 'Add Task';
+  document.getElementById('taskName').value = task ? task.name : '';
+
+  // Difficulty
+  selectedDiff = task ? (task.difficulty || 'med') : 'med';
+  renderDiffPicker();
+
+  // XP / Gold
+  const def = DIFF_DEFAULTS[selectedDiff];
+  document.getElementById('taskXP').value   = task ? task.xp_reward   : def.xp;
+  document.getElementById('taskGold').value = task ? task.gold_reward  : def.gold;
+
+  // Show/hide days section
+  const daysSection = document.getElementById('taskDaysSection');
+  daysSection.style.display = cat === 'weekly' ? 'block' : 'none';
+  if (cat === 'weekly') {
+    const days = task?.days_of_week || [];
+    document.querySelectorAll('#taskDaysSection input[type="checkbox"]').forEach(cb => {
+      cb.checked = days.includes(parseInt(cb.value));
+    });
+  }
+
+  // Show/hide priority section
+  const prioritySection = document.getElementById('taskPrioritySection');
+  prioritySection.style.display = cat === 'backlog' ? 'block' : 'none';
+  if (cat === 'backlog') {
+    selectedPriority = task?.priority || 'P1';
+    renderPriorityPicker();
+  }
+
+  document.getElementById('taskModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('taskName').focus(), 300);
+}
+
+function closeTaskModal(e) {
+  if (e && e.target !== document.getElementById('taskModalOverlay')) return;
+  document.getElementById('taskModalOverlay').classList.remove('open');
+  editingTaskId = null;
+}
+
+function selectDiff(diff) {
+  selectedDiff = diff;
+  renderDiffPicker();
+  // Update XP/gold to defaults only if user hasn't manually changed them
+  const def = DIFF_DEFAULTS[diff];
+  document.getElementById('taskXP').value   = def.xp;
+  document.getElementById('taskGold').value = def.gold;
+}
+
+function renderDiffPicker() {
+  document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.diff === selectedDiff);
+  });
+}
+
+function selectPriority(p) {
+  selectedPriority = p;
+  renderPriorityPicker();
+}
+
+function renderPriorityPicker() {
+  document.querySelectorAll('.priority-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.p === selectedPriority);
+  });
+}
+
+async function saveTask() {
+  const name = document.getElementById('taskName').value.trim();
+  if (!name) { showToast('Please enter a task name.'); return; }
+
+  const xp   = parseInt(document.getElementById('taskXP').value)   || DIFF_DEFAULTS[selectedDiff].xp;
+  const gold = parseFloat(document.getElementById('taskGold').value) || DIFF_DEFAULTS[selectedDiff].gold;
+
+  // Collect days_of_week for weekly tasks
+  let days_of_week = null;
+  if (taskModalCat === 'weekly') {
+    const checked = [...document.querySelectorAll('#taskDaysSection input[type="checkbox"]:checked')]
+      .map(cb => parseInt(cb.value));
+    days_of_week = checked.length > 0 ? checked : null;
+  }
+
+  const payload = {
+    user_id:    USER_ID,
+    name,
+    category:   taskModalCat,
+    difficulty: selectedDiff,
+    xp_reward:  xp,
+    gold_reward: gold,
+    is_active:  true,
+    days_of_week,
+    priority: taskModalCat === 'backlog' ? selectedPriority : null,
+  };
+
+  const btn = document.getElementById('saveTaskBtn');
+  btn.disabled = true;
+
+  let error;
+  if (editingTaskId) {
+    ({ error } = await sb.from('tasks').update(payload).eq('id', editingTaskId).eq('user_id', USER_ID));
+  } else {
+    ({ error } = await sb.from('tasks').insert(payload));
+  }
+
+  btn.disabled = false;
+  if (error) { showToast('❌ Failed to save task.'); return; }
+
+  document.getElementById('taskModalOverlay').classList.remove('open');
+  showToast(editingTaskId ? '✓ Task updated!' : '✓ Task added!');
+  await loadAll();
+  renderAll();
+}
+
+async function deleteTask(id) {
+  const { error } = await sb.from('tasks').update({ is_active: false }).eq('id', id).eq('user_id', USER_ID);
+  if (error) { showToast('❌ Failed to delete task.'); return; }
+  // Also remove from todayCompletions if it was done
+  todayCompletions.delete(id);
+  await loadAll();
+  renderAll();
+  showToast('Task removed.');
+}
+
+// Shows inline delete confirm on the task row
+function confirmDeleteTask(id, el) {
+  // Replace the action buttons with a confirm row
+  const actions = el.querySelector('.task-actions');
+  actions.innerHTML = `
+    <span class="task-del-confirm">
+      Delete?
+      <button class="task-del-yes" onclick="window._deleteTask('${id}')">Yes</button>
+      <button class="task-del-no" onclick="window._cancelDelete(this)">No</button>
+    </span>`;
+}
+
+function cancelDelete(btn) {
+  // Re-render the task row by triggering a full render
+  renderTaskList(taskModalCat); // fallback — just rerender all lists
+  renderTaskList('daily');
+  renderTaskList('weekly');
+  renderTaskList('backlog');
+}
+
+// ═══════════════════════════════════════════════════════════
 // EXPOSE GLOBALS for inline HTML onclick handlers
 // ═══════════════════════════════════════════════════════════
 Object.assign(window, {
@@ -711,6 +909,15 @@ Object.assign(window, {
   handleDeleteAccount,
   confirmLogout,
   _buyReward: buyReward,
+  openTaskModal,
+  closeTaskModal,
+  selectDiff,
+  selectPriority,
+  saveTask,
+  _deleteTask: deleteTask,
+  _confirmDeleteTask: confirmDeleteTask,
+  _cancelDelete: cancelDelete,
+  _taskById: taskById,
 });
 
 // ═══════════════════════════════════════════════════════════
