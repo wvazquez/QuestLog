@@ -3,6 +3,13 @@ name: Deploy QuestLog to GitHub Pages
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - '*.html'
+      - 'vite.config.js'
+      - 'manifest.json'
+      - 'sw.js'
   workflow_dispatch:
 
 permissions:
