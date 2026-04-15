@@ -1,5 +1,9 @@
 import './styles/app.css'
 import { sb, SUPABASE_URL } from './lib/supabase.js'
+import {
+  xpForLevel, getCharLevel, getCharTitle, getStreakMultiplier,
+  escapeHtml, todayStr, formatDate, CHAR_TITLES,
+} from './lib/utils.js'
 
 // ═══════════════════════════════════════════════════════════
 // CONFIG
@@ -366,7 +370,7 @@ function renderTaskList(cat) {
     div.innerHTML = `
       <div class="task-check"><div class="check-icon">✓</div></div>
       <div class="task-body">
-        <div class="task-name">${task.name}</div>
+        <div class="task-name">${escapeHtml(task.name)}</div>
         <div class="task-meta">
           <span class="pill pill-xp">+${task.xp_reward} XP</span>
           <span class="pill pill-gold">+${task.gold_reward}g</span>
@@ -451,14 +455,14 @@ function renderGoals() {
           const done = t.archived_at || todayCompletions.has(t.id);
           return `<div class="subtask-row${done?' done':''}">
             <div class="subtask-dot"></div>
-            <span>${t.name}</span>
+            <span>${escapeHtml(t.name)}</span>
           </div>`;
         }).join('')}
       </div>` : '';
     return `
     <div class="goal-card">
       <div class="goal-top">
-        <div class="goal-title">${g.title}</div>
+        <div class="goal-title">${escapeHtml(g.title)}</div>
         <div class="goal-actions">
           <button class="task-action-btn" title="Edit" onclick="window.openGoalModal(window._goalById('${g.id}'))">✏️</button>
           <button class="task-action-btn danger" title="Delete" onclick="window._deleteGoal('${g.id}')">🗑️</button>
@@ -469,7 +473,7 @@ function renderGoals() {
         <span class="goal-badge diff-${diff}">${diff}</span>
         <span class="goal-badge horizon">${g.time_horizon || 'monthly'}</span>
       </div>
-      ${g.description ? `<div class="goal-desc">${g.description}</div>` : ''}
+      ${g.description ? `<div class="goal-desc">${escapeHtml(g.description)}</div>` : ''}
       <div class="goal-bar"><div class="goal-bar-fill" style="width:${pct}%"></div></div>
       <div class="goal-footer">
         <span>${pct}% complete</span>
@@ -509,9 +513,7 @@ function taskById(id) {
   return findTask(id);
 }
 
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
+// todayStr() imported from src/lib/utils.js
 
 function checkLevelUp() {
   const newLevel = getCharLevel(character.xp || 0);
@@ -768,8 +770,8 @@ function renderAdmin() {
         <div class="admin-user-row">
           <div class="admin-avatar">${p.avatar_emoji || '⚔️'}</div>
           <div style="flex:1;min-width:0">
-            <div class="admin-user-name">${p.display_name || '—'}${p.is_admin ? '<span class="admin-badge">Admin</span>' : ''}</div>
-            <div class="admin-user-email">${p.email || '—'}</div>
+            <div class="admin-user-name">${escapeHtml(p.display_name || '—')}${p.is_admin ? '<span class="admin-badge">Admin</span>' : ''}</div>
+            <div class="admin-user-email">${escapeHtml(p.email || '—')}</div>
           </div>
         </div>
         <div class="admin-user-stats">
@@ -839,39 +841,8 @@ initServiceWorker();
 
 // ═══════════════════════════════════════════════════════════
 // PHASE 5 — XP / LEVEL SYSTEM
+// Pure functions imported from src/lib/utils.js
 // ═══════════════════════════════════════════════════════════
-function xpForLevel(lvl) {
-  if (lvl <= 1)  return 0;
-  if (lvl <= 10) return (lvl - 1) * 100;
-  if (lvl <= 20) return 1000 + (lvl - 11) * 150;
-  if (lvl <= 35) return 2500 + (lvl - 21) * 200;
-  return 5500 + (lvl - 36) * 300;
-}
-
-function getCharLevel(totalXP) {
-  let lvl = 1;
-  while (lvl < 50 && totalXP >= xpForLevel(lvl + 1)) lvl++;
-  return lvl;
-}
-
-function getStreakMultiplier(streak) {
-  if (streak >= 30) return 1.5;
-  if (streak >= 14) return 1.25;
-  if (streak >= 7)  return 1.1;
-  return 1.0;
-}
-
-const CHAR_TITLES = [
-  [1,4,'Apprentice'],[5,9,'Squire'],[10,14,'Scout'],[15,19,'Warrior'],
-  [20,24,'Knight'],[25,29,'Champion'],[30,34,'Guardian'],
-  [35,39,'Veteran'],[40,49,'Master'],[50,50,'Legend'],
-];
-function getCharTitle(level) {
-  for (const [min, max, title] of CHAR_TITLES) {
-    if (level >= min && level <= max) return title;
-  }
-  return 'Legend';
-}
 
 function showLevelUpFlash(level) {
   const el = document.createElement('div');
@@ -986,7 +957,7 @@ function renderArchive() {
         <div class="archive-task">
           <div class="archive-task-check">✓</div>
           <div class="archive-task-body">
-            <div class="archive-task-name">${t.name}</div>
+            <div class="archive-task-name">${escapeHtml(t.name)}</div>
             <div class="task-meta">
               <span class="pill pill-xp">+${t.xp_reward} XP</span>
               <span class="pill pill-gold">+${t.gold_reward}g</span>
@@ -1208,9 +1179,9 @@ function calSelectDay(day, dateStr, dow, goalsDue) {
   const dailies  = tasks.daily;
   const weeklies = tasks.weekly.filter(t => !t.days_of_week || t.days_of_week.length === 0 || t.days_of_week.includes(dow));
   const allItems = [
-    ...dailies.map(t  => ({ name: t.name,  type: 'daily',  dot: 'daily'  })),
-    ...weeklies.map(t => ({ name: t.name,  type: 'weekly', dot: 'weekly' })),
-    ...(goalsDue || []).map(g => ({ name: g.title, type: 'goal deadline', dot: 'goal' })),
+    ...dailies.map(t  => ({ name: escapeHtml(t.name),  type: 'daily',  dot: 'daily'  })),
+    ...weeklies.map(t => ({ name: escapeHtml(t.name),  type: 'weekly', dot: 'weekly' })),
+    ...(goalsDue || []).map(g => ({ name: escapeHtml(g.title), type: 'goal deadline', dot: 'goal' })),
   ];
 
   detail.classList.add('open');
@@ -1223,7 +1194,7 @@ function calSelectDay(day, dateStr, dow, goalsDue) {
     itemsEl.innerHTML = allItems.map(i => `
       <div class="cal-detail-item">
         <div class="cal-detail-dot cal-dot ${i.dot}"></div>
-        <span>${i.name}</span>
+        <span>${escapeHtml(i.name)}</span>
         <span style="margin-left:auto;font-size:11px;color:var(--muted)">${i.type}</span>
       </div>`).join('');
   }
@@ -1298,7 +1269,7 @@ function renderLeaderboard(rows) {
         <div class="lb-rank ${rankCls}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}</div>
         <div class="lb-avatar">${row.avatar_emoji || '⚔️'}</div>
         <div class="lb-info">
-          <div class="lb-name">${row.display_name || 'Hero'}${isMe ? ' <span style="color:var(--accent);font-size:11px">(you)</span>' : ''}</div>
+          <div class="lb-name">${escapeHtml(row.display_name || 'Hero')}${isMe ? ' <span style="color:var(--accent);font-size:11px">(you)</span>' : ''}</div>
           <div class="lb-sub">${getCharTitle(row.level)} · Lv ${row.level}</div>
         </div>
         <div class="lb-stats">

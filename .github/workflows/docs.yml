@@ -1,0 +1,45 @@
+name: Generate API Docs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      # Regenerate only when source JS changes
+      - 'src/**/*.js'
+      - 'docs/index.md'
+      - 'jsdoc.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need write access to commit docs back
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate JSDoc
+        run: npm run docs
+
+      - name: Commit generated docs
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add docs/api/
+          # Only commit if something changed
+          git diff --cached --quiet || git commit -m "docs: auto-regenerate API docs [skip ci]"
+          git push
