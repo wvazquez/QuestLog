@@ -56,8 +56,7 @@ jobs:
               body += `| Functions  | ${t.functions.pct}% (${t.functions.covered}/${t.functions.total}) |\n`
               body += `| Branches   | ${t.branches.pct}% (${t.branches.covered}/${t.branches.total}) |\n`
               body += `| Statements | ${t.statements.pct}% |\n\n`
-              body += `> \`utils.js\` (pure functions): ~98% ✅\n`
-              body += `> \`main.js\`: add DOM tests to increase overall coverage`
+              body += `> \`utils.js\` (pure functions): ~98% ✅`
             } catch(e) {
               body += `_Coverage data not available (${e.message})._`
             }

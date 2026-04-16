@@ -33,16 +33,46 @@ locally; it only lives in the repo via the bot commit.
 |------|------|
 | `src/lib/utils.js` | Pure utility functions — XP math, level curve, streak multipliers, `escapeHtml`, date helpers. Fully unit-tested (~98% coverage). |
 | `src/lib/supabase.js` | Singleton Supabase client. Reads `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` from env — never hardcode credentials. |
-| `src/main.js` | App shell entry. Auth init, render pipeline, all feature modules (Task CRUD, Goals, Streak, Leaderboard, Calendar). |
+| `src/main.js` | App shell entry — **1,484 lines**. All feature modules live here until extracted to `src/modules/`. Use the section map below to read only what you need. |
 | `src/auth-entry.js` | Auth page entry (excluded from coverage thresholds). |
 | `src/landing-entry.js` | Landing page entry (excluded from coverage thresholds). |
+
+## src/main.js Section Map
+
+`main.js` is a monolith (1,484 lines). Use `Read` with `offset`/`limit` to jump directly
+to the relevant section instead of reading the whole file.
+
+| Section | Start line | End line |
+|---------|-----------|----------|
+| Config & constants | 1 | 13 |
+| State (app globals) | 14 | 27 |
+| Boot & loadAll | 28 | 107 |
+| Realtime subscription | 108 | 126 |
+| Complete / undo task | 127 | 238 |
+| Rewards (buy) | 239 | 255 |
+| Render pipeline | 256 | 504 |
+| Helpers (toast, tabs, ripple, etc.) | 505 | 584 |
+| Countdown + daily reset | 585 | 600 |
+| Local cache (offline fallback) | 601 | 624 |
+| Auth / profile / settings | 625 | 738 |
+| Admin panel | 739 | 788 |
+| Service worker + notifications | 789 | 841 |
+| XP / level system | 842 | 854 |
+| Streak reset + shield (Phase 3) | 855 | 875 |
+| Backlog archive (Phase 2) | 876 | 989 |
+| Goal CRUD (Phase 4) | 990 | 1108 |
+| Calendar view (Phase 6) | 1109 | 1218 |
+| Leaderboard (Phase 7) | 1219 | 1291 |
+| Task CRUD | 1292 | 1451 |
+| Expose globals (onclick handlers) | 1452 | 1480 |
+| Start (boot call) | 1481 | 1484 |
 
 ## Dev Workflow
 
 - **Feature branches**: use `claude/<description>-<id>` naming
 - **CI triggers**: `test.yml` runs on push to `main` or `claude/**` branches, and on PRs to `main`
 - **Docs trigger**: `docs.yml` runs only on push to `main` when `src/**/*.js`, `docs/index.md`, or `jsdoc.json` changes
-- **Deploy trigger**: `deploy.yml` runs on push to `main`
+- **Deploy trigger**: `deploy.yml` runs on push to `main` when app source files change
 
 ## Common Commands
 
@@ -64,5 +94,6 @@ For CI, secrets are set under GitHub → Settings → Secrets → Actions:
 
 - Framework: Vitest with jsdom environment
 - Config: `vitest.config.js`
-- Coverage thresholds: 15% globally; `src/lib/utils.js` has per-file rules
+- Coverage thresholds: 15% globally (lines, functions, branches); `perFile` enforcement is disabled
+- `src/lib/utils.js` achieves ~98% coverage by practice, not enforced threshold
 - Coverage reports posted as PR comments automatically by `test.yml`
