@@ -10,6 +10,19 @@ import {
 
 const CIRC = 176;
 
+let showAllWeekly = false;
+
+export function toggleShowAllWeekly() {
+  showAllWeekly = !showAllWeekly;
+  const btn = document.getElementById('showAllWeeklyBtn');
+  if (btn) {
+    btn.textContent = showAllWeekly ? 'Today Only' : 'Show All';
+    btn.classList.toggle('active', showAllWeekly);
+  }
+  renderTaskList('weekly');
+  renderCounts();
+}
+
 export function renderAll() {
   renderHeader();
   renderChar();
@@ -18,7 +31,7 @@ export function renderAll() {
   renderTaskList('daily');
   renderTaskList('weekly');
   renderTaskList('backlog');
-  renderArchive();
+  renderCompleted();
   renderCounts();
   renderStats();
   renderGoals();
@@ -57,7 +70,7 @@ export function renderStreak() {
   const streak = character.streak || 0;
   const shield = character.streak_shield || 0;
   document.getElementById('streakCount').textContent = streak;
-  const msgs = ['Complete all dailies to start your streak!', 'Keep it up — you\'re building momentum!', 'Crushing it! Stay consistent!', 'Unstoppable streak incoming!', 'You are a habit legend!'];
+  const msgs = ['Complete all to-do items to start your streak!', 'Keep it up — you\'re building momentum!', 'Crushing it! Stay consistent!', 'Unstoppable streak incoming!', 'You are a habit legend!'];
   const idx = Math.min(Math.floor(streak / 3), msgs.length - 1);
   document.getElementById('streakMsg').textContent = msgs[idx];
   const shieldEl = document.getElementById('streakShield');
@@ -90,7 +103,7 @@ export function renderCounts() {
   const todayDow = new Date().getDay();
   ['daily', 'weekly', 'backlog'].forEach(cat => {
     let visible = tasks[cat];
-    if (cat === 'weekly') {
+    if (cat === 'weekly' && !showAllWeekly) {
       visible = tasks[cat].filter(t =>
         !t.days_of_week || t.days_of_week.length === 0 || t.days_of_week.includes(todayDow)
       );
@@ -111,7 +124,7 @@ export function renderTaskList(cat) {
 
   let visibleTasks = tasks[cat];
 
-  if (cat === 'weekly') {
+  if (cat === 'weekly' && !showAllWeekly) {
     visibleTasks = tasks[cat].filter(t => {
       if (!t.days_of_week || t.days_of_week.length === 0) return true;
       return t.days_of_week.includes(todayDow);
@@ -155,11 +168,12 @@ export function renderTaskList(cat) {
           ${task.priority ? `<span class="pill pill-${task.priority.toLowerCase()}">${task.priority}</span>` : ''}
           ${habit.current_streak > 0 ? `<span class="pill pill-streak">🔥${habit.current_streak}</span>` : ''}
         </div>
+        ${task.notes ? `<div class="task-notes">${escapeHtml(task.notes)}</div>` : ''}
       </div>
       <div class="diff-dot diff-${task.difficulty}"></div>
       <div class="task-actions">
-        <button class="task-action-btn" title="Edit" onclick="event.stopPropagation();window.openTaskModal('${cat}',window._taskById('${task.id}'))">✏️</button>
-        <button class="task-action-btn danger" title="Delete" onclick="event.stopPropagation();window._confirmDeleteTask('${task.id}',this.closest('.task'))">🗑️</button>
+        <button class="task-action-btn task-edit-btn" title="Edit" onclick="event.stopPropagation();window.openTaskModal('${cat}',window._taskById('${task.id}'))">✏️</button>
+        <button class="task-action-btn danger task-delete-btn" title="Delete" onclick="event.stopPropagation();window._confirmDeleteTask('${task.id}',this.closest('.task'))">🗑️</button>
       </div>
     `;
     // Only allow direct toggle if no subtasks (subtask-driven tasks auto-complete)
@@ -217,7 +231,7 @@ export function renderStats() {
 
   const bars = document.getElementById('statBars');
   const cats = [
-    { label: 'Daily habits', cat: 'daily', color: 'var(--accent)' },
+    { label: "Today's To-Do", cat: 'daily', color: 'var(--accent)' },
     { label: 'Weekly routines', cat: 'weekly', color: 'var(--accent3)' },
     { label: 'Backlog tasks', cat: 'backlog', color: 'var(--accent2)' },
   ];
@@ -309,19 +323,15 @@ export function renderRewards() {
   `).join('');
 }
 
-export function renderArchive() {
+export function renderCompleted() {
   const archivedBacklog = store.get('archivedBacklog');
-  const toggleEl = document.getElementById('archiveToggle');
-  const listEl = document.getElementById('archiveList');
-  if (!toggleEl || !listEl) return;
+  const listEl = document.getElementById('list-completed');
+  if (!listEl) return;
 
   if (archivedBacklog.length === 0) {
-    toggleEl.style.display = 'none';
-    listEl.style.display = 'none';
+    listEl.innerHTML = '<div style="text-align:center;color:var(--muted);padding:16px;font-size:13px">No completed items yet.</div>';
     return;
   }
-  toggleEl.style.display = 'flex';
-  document.getElementById('archiveCount').textContent = archivedBacklog.length;
 
   const groups = {};
   archivedBacklog.forEach(t => {
@@ -335,7 +345,7 @@ export function renderArchive() {
     const [y, m] = month.split('-');
     const label = isNaN(+m) ? month : new Date(+y, +m - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     return `
-      <div class="archive-month-header">${label}<span class="archive-month-count">${groups[month].length}</span></div>
+      <div class="archive-month-header">${label}</div>
       ${groups[month].map(t => `
         <div class="archive-task">
           <div class="archive-task-check">✓</div>
@@ -366,5 +376,5 @@ export function init() {
   });
   store.subscribe('goals', renderGoals);
   store.subscribe('rewards', renderRewards);
-  store.subscribe('archivedBacklog', renderArchive);
+  store.subscribe('archivedBacklog', renderCompleted);
 }

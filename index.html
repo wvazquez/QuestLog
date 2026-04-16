@@ -110,7 +110,7 @@
           </svg>
           <div class="ring-center"><div class="ring-pct" id="ring-daily-pct" style="color:var(--accent)">0%</div><div class="ring-sub">Daily</div></div>
         </div>
-        <div class="ring-title">Habits</div>
+        <div class="ring-title">To-Do</div>
       </div>
       <div class="ring-card">
         <div class="ring-wrap">
@@ -128,10 +128,11 @@
     <!-- Daily tasks -->
     <div class="section">
       <div class="section-header">
-        <div class="section-title">⚡ Daily Habits</div>
+        <div class="section-title">⚡ Today's To-Do Items</div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="section-count" id="count-daily">0/0</div>
-          <button class="add-btn" onclick="openTaskModal('daily')" title="Add daily habit">+</button>
+          <button class="add-btn" onclick="openTaskModal('daily')" title="Add to-do item">+</button>
+          <button class="section-collapse-btn" onclick="toggleSectionCollapse('daily')"><span class="section-chevron" id="chevron-daily">▼</span></button>
         </div>
       </div>
       <div id="list-daily"></div>
@@ -142,8 +143,10 @@
       <div class="section-header">
         <div class="section-title">📅 Weekly Routines</div>
         <div style="display:flex;align-items:center;gap:8px">
+          <button class="show-all-btn" id="showAllWeeklyBtn" onclick="toggleShowAllWeekly()">Show All</button>
           <div class="section-count" id="count-weekly">0/0</div>
           <button class="add-btn" onclick="openTaskModal('weekly')" title="Add weekly routine">+</button>
+          <button class="section-collapse-btn" onclick="toggleSectionCollapse('weekly')"><span class="section-chevron" id="chevron-weekly">▼</span></button>
         </div>
       </div>
       <div id="list-weekly"></div>
@@ -156,16 +159,21 @@
         <div style="display:flex;align-items:center;gap:8px">
           <div class="section-count" id="count-backlog">0/0</div>
           <button class="add-btn" onclick="openTaskModal('backlog')" title="Add backlog task">+</button>
+          <button class="section-collapse-btn" onclick="toggleSectionCollapse('backlog')"><span class="section-chevron" id="chevron-backlog">▼</span></button>
         </div>
       </div>
       <div id="list-backlog"></div>
-      <!-- Completed backlog accordion -->
-      <div class="archive-toggle" id="archiveToggle" onclick="toggleArchive()" style="display:none">
-        <span class="archive-toggle-icon">📦</span>
-        <span>Completed <span id="archiveCount">0</span></span>
-        <span class="archive-chevron" id="archiveChevron">▼</span>
+    </div>
+
+    <!-- Completed section (standalone) -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">✅ Completed</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="section-collapse-btn" onclick="toggleSectionCollapse('completed')"><span class="section-chevron" id="chevron-completed">▼</span></button>
+        </div>
       </div>
-      <div id="archiveList" style="display:none"></div>
+      <div id="list-completed"></div>
     </div>
   </div>
 
@@ -324,7 +332,7 @@
     <div class="modal-handle"></div>
     <div class="modal-title" id="taskModalTitle">Add Task</div>
 
-    <label class="modal-field-label">Task Name</label>
+    <label class="modal-field-label" id="taskNameLabel">Task Name</label>
     <input class="modal-input" type="text" id="taskName" placeholder="What's your quest?" maxlength="60">
 
     <label class="modal-field-label">Difficulty</label>
@@ -358,6 +366,12 @@
       </div>
     </div>
 
+    <!-- Daily: notes -->
+    <div id="taskNotesSection" style="display:none">
+      <label class="modal-field-label">Notes <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(optional)</span></label>
+      <textarea class="modal-input" id="taskNotes" placeholder="Add notes..." rows="3" maxlength="500" style="resize:vertical;min-height:60px"></textarea>
+    </div>
+
     <!-- Backlog: priority -->
     <div id="taskPrioritySection" style="display:none">
       <label class="modal-field-label">Priority</label>
@@ -370,6 +384,8 @@
     </div>
 
     <button class="modal-btn primary" id="saveTaskBtn" onclick="saveTask()">Save Task</button>
+    <button class="modal-btn" id="moveToTodayBtn" style="display:none;background:rgba(108,252,184,0.12);color:var(--accent3);border:1px solid rgba(108,252,184,0.25)" onclick="moveBacklogToDaily()">⚡ Move to Today's To-Do</button>
+    <button class="modal-btn danger" id="deleteTaskFromModalBtn" style="display:none" onclick="deleteTaskFromModal()">Delete Task</button>
     <button class="modal-btn ghost" onclick="closeTaskModal()">Cancel</button>
   </div>
 </div>
