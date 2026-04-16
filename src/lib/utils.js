@@ -135,5 +135,10 @@ export function todayStr() {
  */
 export function formatDate(isoDate, opts = { month: 'short', day: 'numeric' }) {
   if (!isoDate) return ''
-  return new Date(isoDate).toLocaleDateString('en-US', opts)
+  // Parse YYYY-MM-DD as local date to avoid UTC timezone shift
+  const parts = String(isoDate).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const d = parts
+    ? new Date(+parts[1], +parts[2] - 1, +parts[3])
+    : new Date(isoDate)
+  return d.toLocaleDateString('en-US', opts)
 }
