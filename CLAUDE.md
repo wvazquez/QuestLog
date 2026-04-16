@@ -27,45 +27,66 @@ Two-layer structure:
 `docs/api/` back with `[skip ci]` to prevent re-trigger loops. `docs/api/` is gitignored
 locally; it only lives in the repo via the bot commit.
 
+## Architecture
+
+### Module System
+
+The app uses a **clean architecture** with a centralized store and event bus:
+
+| Layer | Files | Role |
+|-------|-------|------|
+| Infrastructure | `src/lib/store.js`, `src/lib/events.js` | Centralized state management and pub/sub event bus |
+| Utilities | `src/lib/utils.js`, `src/lib/supabase.js` | Pure functions and Supabase client singleton |
+| Feature modules | `src/modules/*.js` | Self-contained features (15 modules) |
+| Orchestrator | `src/main.js` | ~70 lines — imports, wires subscriptions, exposes window globals, calls boot() |
+
+### State Management (`src/lib/store.js`)
+
+All shared state lives in a centralized store. Modules read/write via `get()`, `set()`, `update()`.
+Store supports per-key subscriptions — e.g., `subscribe('character', renderChar)` auto-renders on change.
+
+State keys: `USER_ID`, `currentUser`, `userProfile`, `tasks`, `archivedBacklog`, `habits`,
+`character`, `goals`, `rewards`, `todayCompletions`
+
+### Event Bus (`src/lib/events.js`)
+
+Cross-module communication without direct imports. Key events:
+- `task:completed` — triggers cache save, SW sync
+- `state:reload` — triggers loadAll + renderAll (used after CRUD operations)
+- `render:all` — triggers full re-render
+- `level:check` — triggers level-up check
+
+### Module Map
+
+| Module | Role | Lines |
+|--------|------|-------|
+| `modules/boot.js` | Auth check, data loading, realtime subscription | ~120 |
+| `modules/render.js` | All DOM rendering functions, reactive subscriptions | ~330 |
+| `modules/game-engine.js` | Core completion loop, XP/streak logic, archive | ~200 |
+| `modules/tasks.js` | Task CRUD modal management | ~160 |
+| `modules/goals.js` | Goal CRUD modal management | ~130 |
+| `modules/calendar.js` | Monthly calendar view | ~120 |
+| `modules/auth.js` | Profile, settings, account deletion | ~120 |
+| `modules/leaderboard.js` | Leaderboard with 5-min cache | ~80 |
+| `modules/ui.js` | Toast, sync indicator, loading, animations, tab switching | ~80 |
+| `modules/service-worker.js` | SW registration, notification sync | ~60 |
+| `modules/admin.js` | Admin panel (user management) | ~55 |
+| `modules/cache.js` | localStorage offline fallback, auto-save via subscriptions | ~40 |
+| `modules/rewards.js` | Gold spending, reward rendering | ~40 |
+| `modules/streak.js` | Streak reset + shield logic | ~30 |
+| `modules/countdown.js` | Midnight countdown timer | ~17 |
+
 ## Key Source Files
 
 | File | Role |
 |------|------|
+| `src/lib/store.js` | Centralized state with per-key subscriptions. All shared app state lives here. |
+| `src/lib/events.js` | Simple pub/sub event bus for decoupled cross-module communication. |
 | `src/lib/utils.js` | Pure utility functions — XP math, level curve, streak multipliers, `escapeHtml`, date helpers. Fully unit-tested (~98% coverage). |
 | `src/lib/supabase.js` | Singleton Supabase client. Reads `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` from env — never hardcode credentials. |
-| `src/main.js` | App shell entry — **1,484 lines**. All feature modules live here until extracted to `src/modules/`. Use the section map below to read only what you need. |
+| `src/main.js` | Thin orchestrator (~70 lines) — imports modules, wires reactive subscriptions, exposes window globals, calls boot(). |
 | `src/auth-entry.js` | Auth page entry (excluded from coverage thresholds). |
 | `src/landing-entry.js` | Landing page entry (excluded from coverage thresholds). |
-
-## src/main.js Section Map
-
-`main.js` is a monolith (1,484 lines). Use `Read` with `offset`/`limit` to jump directly
-to the relevant section instead of reading the whole file.
-
-| Section | Start line | End line |
-|---------|-----------|----------|
-| Config & constants | 1 | 13 |
-| State (app globals) | 14 | 27 |
-| Boot & loadAll | 28 | 107 |
-| Realtime subscription | 108 | 126 |
-| Complete / undo task | 127 | 238 |
-| Rewards (buy) | 239 | 255 |
-| Render pipeline | 256 | 504 |
-| Helpers (toast, tabs, ripple, etc.) | 505 | 584 |
-| Countdown + daily reset | 585 | 600 |
-| Local cache (offline fallback) | 601 | 624 |
-| Auth / profile / settings | 625 | 738 |
-| Admin panel | 739 | 788 |
-| Service worker + notifications | 789 | 841 |
-| XP / level system | 842 | 854 |
-| Streak reset + shield (Phase 3) | 855 | 875 |
-| Backlog archive (Phase 2) | 876 | 989 |
-| Goal CRUD (Phase 4) | 990 | 1108 |
-| Calendar view (Phase 6) | 1109 | 1218 |
-| Leaderboard (Phase 7) | 1219 | 1291 |
-| Task CRUD | 1292 | 1451 |
-| Expose globals (onclick handlers) | 1452 | 1480 |
-| Start (boot call) | 1481 | 1484 |
 
 ## Dev Workflow
 
