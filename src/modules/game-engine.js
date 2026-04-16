@@ -79,7 +79,7 @@ export async function toggleTask(e, taskId, el) {
       }).eq('task_id', taskId).eq('user_id', USER_ID)
     ]);
 
-    // Check if all dailies done -> streak + bonus
+    // Check if all dailies done -> streak + bonus (before archive timeout)
     if (tasks.daily.length > 0 && tasks.daily.every(t => todayCompletions.has(t.id))) {
       character.streak = (character.streak || 0) + 1;
       if (character.streak > (character.best_streak || 0)) character.best_streak = character.streak;
@@ -105,9 +105,31 @@ export async function toggleTask(e, taskId, el) {
       }).eq('user_id', USER_ID);
 
       store.set('character', { ...character });
-      showToast('🔥 All dailies done! ' + character.streak + ' day streak!' + (shieldAwarded ? ' 🛡️ Shield earned!' : '') + ' +50 XP bonus!');
+      showToast('🔥 All to-do items done! ' + character.streak + ' day streak!' + (shieldAwarded ? ' 🛡️ Shield earned!' : '') + ' +50 XP bonus!');
     } else if (mult > 1) {
       showToast('✨ ' + mult + '× streak bonus! +' + earnedXP + ' XP');
+    }
+
+    // Daily tasks are one-time: archive after 2 seconds
+    if (task.category === 'daily') {
+      setTimeout(async () => {
+        const now = new Date();
+        const archiveMonth = now.toISOString().slice(0, 7);
+        // Move from active daily list to archived
+        const currentTasks = store.get('tasks');
+        currentTasks.daily = currentTasks.daily.filter(t => t.id !== task.id);
+        store.set('tasks', { ...currentTasks });
+        const archived = { ...task, archived_at: now.toISOString(), archive_month: archiveMonth, completed_at: now.toISOString() };
+        const currentArchived = store.get('archivedBacklog');
+        currentArchived.unshift(archived);
+        store.set('archivedBacklog', [...currentArchived]);
+        // Persist archive in DB
+        await sb.from('tasks').update({
+          completed_at: now.toISOString(),
+          archived_at: now.toISOString(),
+          archive_month: archiveMonth,
+        }).eq('id', task.id).eq('user_id', USER_ID);
+      }, 2000);
     }
 
     // Auto-complete parent if all subtasks are done

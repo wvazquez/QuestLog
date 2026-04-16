@@ -36,8 +36,7 @@ export function renderCalendar() {
     const dow = date.getDay();
     const dateStr = date.toISOString().split('T')[0];
     const isToday = date.toDateString() === today.toDateString();
-
-    const dailyTasks = tasks.daily;
+    const dailyTasks = isToday ? tasks.daily : [];
     const weeklyTasks = tasks.weekly.filter(t => !t.days_of_week || t.days_of_week.length === 0 || t.days_of_week.includes(dow));
     const goalsDue = goals.filter(g => (g.target_date || g.deadline || '').slice(0, 10) === dateStr);
 
@@ -76,7 +75,9 @@ export function calSelectDay(day, dateStr, dow, goalsDue) {
     goalsDue = goals.filter(g => (g.target_date || g.deadline || '').slice(0, 10) === dateStr);
   }
 
-  const dailies = tasks.daily;
+  const selectedDate = new Date(calYear, calMonth, day);
+  const isSelectedToday = selectedDate.toDateString() === new Date().toDateString();
+  const dailies = isSelectedToday ? tasks.daily : [];
   const weeklies = tasks.weekly.filter(t => !t.days_of_week || t.days_of_week.length === 0 || t.days_of_week.includes(dow));
   const allItems = [
     ...dailies.map(t => ({ name: escapeHtml(t.name), type: 'daily', dot: 'daily' })),
@@ -91,12 +92,28 @@ export function calSelectDay(day, dateStr, dow, goalsDue) {
   if (!allItems.length) {
     itemsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No tasks or deadlines.</div>';
   } else {
-    itemsEl.innerHTML = allItems.map(i => `
+    const dailyItems = allItems.filter(i => i.type === 'daily');
+    const weeklyItems = allItems.filter(i => i.type === 'weekly');
+    const goalItems = allItems.filter(i => i.type === 'goal deadline');
+
+    const renderItems = (items) => items.map(i => `
       <div class="cal-detail-item">
         <div class="cal-detail-dot cal-dot ${i.dot}"></div>
         <span>${escapeHtml(i.name)}</span>
         <span style="margin-left:auto;font-size:11px;color:var(--muted)">${i.type}</span>
       </div>`).join('');
+
+    let html = '';
+    if (dailyItems.length) html += renderItems(dailyItems);
+    if (weeklyItems.length) {
+      html += `<div class="cal-routine-header" onclick="toggleCalRoutines()">
+        <span>📅 Routines (${weeklyItems.length})</span>
+        <span class="section-chevron" id="chevron-cal-routines">▼</span>
+      </div>`;
+      html += `<div id="list-cal-routines">${renderItems(weeklyItems)}</div>`;
+    }
+    if (goalItems.length) html += renderItems(goalItems);
+    itemsEl.innerHTML = html;
   }
 }
 

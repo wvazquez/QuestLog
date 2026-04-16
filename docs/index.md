@@ -89,6 +89,9 @@ ALTER TABLE goals ADD COLUMN IF NOT EXISTS category text DEFAULT 'personal';
 ALTER TABLE goals ADD COLUMN IF NOT EXISTS completed_at timestamptz;
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS goal_id uuid REFERENCES goals(id) ON DELETE SET NULL;
 
+-- Phase 8 (Notes)
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS notes text;
+
 -- Phase 7 (Leaderboard)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS show_on_leaderboard boolean NOT NULL DEFAULT false;
 ```

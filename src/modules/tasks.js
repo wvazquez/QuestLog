@@ -27,7 +27,14 @@ export function openTaskModal(cat, task = null) {
   taskModalCat = cat;
   editingTaskId = task ? task.id : null;
 
-  document.getElementById('taskModalTitle').textContent = task ? 'Edit Task' : 'Add Task';
+  const titleMap = {
+    daily: { add: 'Add To-Do Item', edit: 'Edit To-Do Item', label: 'To-Do Name' },
+    weekly: { add: 'Add Weekly Routine', edit: 'Edit Weekly Routine', label: 'Routine Name' },
+    backlog: { add: 'Add Task', edit: 'Edit Task', label: 'Task Name' },
+  };
+  const labels = titleMap[cat] || titleMap.backlog;
+  document.getElementById('taskModalTitle').textContent = task ? labels.edit : labels.add;
+  document.getElementById('taskNameLabel').textContent = labels.label;
   document.getElementById('taskName').value = task ? task.name : '';
 
   selectedDiff = task ? (task.difficulty || 'med') : 'med';
@@ -58,12 +65,27 @@ export function openTaskModal(cat, task = null) {
   const subtaskInput = document.getElementById('newSubtaskInput');
   if (subtaskInput) subtaskInput.value = '';
 
+  // Notes section — show for daily tasks
+  const notesSection = document.getElementById('taskNotesSection');
+  notesSection.style.display = cat === 'daily' ? 'block' : 'none';
+  if (cat === 'daily') {
+    document.getElementById('taskNotes').value = task?.notes || '';
+  }
+
   const prioritySection = document.getElementById('taskPrioritySection');
   prioritySection.style.display = cat === 'backlog' ? 'block' : 'none';
   if (cat === 'backlog') {
     selectedPriority = task?.priority || 'P1';
     renderPriorityPicker();
   }
+
+  // Show delete button only when editing an existing task
+  const deleteBtn = document.getElementById('deleteTaskFromModalBtn');
+  if (deleteBtn) deleteBtn.style.display = editingTaskId ? 'block' : 'none';
+
+  // Show "Move to Today" button only when editing a backlog task
+  const moveBtn = document.getElementById('moveToTodayBtn');
+  if (moveBtn) moveBtn.style.display = (cat === 'backlog' && editingTaskId) ? 'block' : 'none';
 
   document.getElementById('taskModalOverlay').classList.add('open');
   setTimeout(() => document.getElementById('taskName').focus(), 300);
@@ -147,6 +169,8 @@ export async function saveTask() {
     days_of_week = checked.length > 0 ? checked : null;
   }
 
+  const notes = taskModalCat === 'daily' ? (document.getElementById('taskNotes').value.trim() || null) : null;
+
   const payload = {
     user_id: USER_ID,
     name,
@@ -157,6 +181,7 @@ export async function saveTask() {
     is_active: true,
     days_of_week,
     priority: taskModalCat === 'backlog' ? selectedPriority : null,
+    notes,
   };
 
   const btn = document.getElementById('saveTaskBtn');
@@ -258,4 +283,25 @@ export function findTask(id) {
 
 export function taskById(id) {
   return findTask(id);
+}
+
+export async function moveBacklogToDaily() {
+  if (!editingTaskId) return;
+  const USER_ID = store.get('USER_ID');
+  const { error } = await sb.from('tasks').update({
+    category: 'daily',
+    priority: null,
+  }).eq('id', editingTaskId).eq('user_id', USER_ID);
+  if (error) { showToast('❌ Failed to move task.'); return; }
+  document.getElementById('taskModalOverlay').classList.remove('open');
+  editingTaskId = null;
+  events.emit('state:reload');
+  showToast("⚡ Moved to Today's To-Do!");
+}
+
+export function deleteTaskFromModal() {
+  if (!editingTaskId) return;
+  document.getElementById('taskModalOverlay').classList.remove('open');
+  deleteTask(editingTaskId);
+  editingTaskId = null;
 }

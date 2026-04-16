@@ -59,6 +59,20 @@ export function showLevelUpFlash(level) {
 }
 
 /**
+ * Toggle collapse/expand of a section by ID.
+ * Uses the list element's display style to track state.
+ * @param {string} sectionId - Section identifier (daily, weekly, backlog, completed, cal-routines)
+ */
+export function toggleSectionCollapse(sectionId) {
+  const list = document.getElementById('list-' + sectionId);
+  const chevron = document.getElementById('chevron-' + sectionId);
+  if (!list) return;
+  const isHidden = list.style.display === 'none';
+  list.style.display = isHidden ? '' : 'none';
+  if (chevron) chevron.classList.toggle('open', isHidden);
+}
+
+/**
  * Switch between tab panes. Emits lazy-load calls for specific tabs.
  * @param {string} tab - Tab name (today, stats, goals, calendar, leaderboard, rewards, admin)
  * @param {Object} callbacks - Optional callbacks for lazy-loaded tabs

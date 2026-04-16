@@ -9,7 +9,7 @@ import { init as initSW } from './modules/service-worker.js'
 import { boot } from './modules/boot.js'
 
 // ── Imports for window globals (HTML onclick handlers) ───
-import { switchTab } from './modules/ui.js'
+import { switchTab, toggleSectionCollapse } from './modules/ui.js'
 import {
   toggleUserMenu, confirmLogout, openSettings, closeSettings,
   saveSettings, openDeleteAccount, closeDeleteAccount, handleDeleteAccount,
@@ -18,7 +18,8 @@ import { buyReward } from './modules/rewards.js'
 import {
   openTaskModal, closeTaskModal, selectDiff, selectPriority,
   saveTask, deleteTask, confirmDeleteTask, cancelDelete, taskById,
-  addSubtaskToModal, removeSubtaskFromModal,
+  addSubtaskToModal, removeSubtaskFromModal, deleteTaskFromModal,
+  moveBacklogToDaily,
 } from './modules/tasks.js'
 import { toggleTask, toggleArchive, permanentDeleteTask } from './modules/game-engine.js'
 import {
@@ -28,6 +29,7 @@ import {
 import { calPrev, calNext } from './modules/calendar.js'
 import { toggleLeaderboard } from './modules/leaderboard.js'
 import { loadAdminData } from './modules/admin.js'
+import { toggleShowAllWeekly } from './modules/render.js'
 import { renderCalendar } from './modules/calendar.js'
 import { loadLeaderboard } from './modules/leaderboard.js'
 
@@ -57,14 +59,18 @@ Object.assign(window, {
   _confirmDeleteTask: confirmDeleteTask, _cancelDelete: cancelDelete,
   _taskById: taskById,
   _toggleTask: toggleTask,
-  addSubtaskToModal, removeSubtaskFromModal,
+  addSubtaskToModal, removeSubtaskFromModal, deleteTaskFromModal, moveBacklogToDaily,
   // Archive
   toggleArchive, _permanentDeleteTask: permanentDeleteTask,
   // Goal CRUD
   openGoalModal, closeGoalModal, selectGoalDiff, saveGoal,
   _deleteGoal: deleteGoal, _completeGoal: completeGoal, _goalById: goalById,
+  // Sections
+  toggleSectionCollapse,
+  toggleShowAllWeekly,
   // Calendar
   calPrev, calNext,
+  toggleCalRoutines: () => toggleSectionCollapse('cal-routines'),
   // Leaderboard
   toggleLeaderboard,
 })
