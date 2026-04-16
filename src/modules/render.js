@@ -125,7 +125,22 @@ export function renderTaskList(cat) {
     );
   }
 
-  visibleTasks.forEach(task => {
+  // For weekly: separate parents from subtasks
+  let parentTasks = visibleTasks;
+  let subtaskMap = {};
+  if (cat === 'weekly') {
+    parentTasks = visibleTasks.filter(t => !t.parent_id);
+    const subtasks = visibleTasks.filter(t => t.parent_id);
+    subtasks.forEach(t => {
+      if (!subtaskMap[t.parent_id]) subtaskMap[t.parent_id] = [];
+      subtaskMap[t.parent_id].push(t);
+    });
+  }
+
+  parentTasks.forEach(task => {
+    const children = subtaskMap[task.id] || [];
+    const hasSubtasks = children.length > 0;
+    const childrenDone = children.filter(t => todayCompletions.has(t.id)).length;
     const done = todayCompletions.has(task.id);
     const habit = habits[task.id] || {};
     const div = document.createElement('div');
@@ -133,7 +148,7 @@ export function renderTaskList(cat) {
     div.innerHTML = `
       <div class="task-check"><div class="check-icon">✓</div></div>
       <div class="task-body">
-        <div class="task-name">${escapeHtml(task.name)}</div>
+        <div class="task-name">${escapeHtml(task.name)}${hasSubtasks ? `<span class="subtask-progress">(${childrenDone}/${children.length})</span>` : ''}</div>
         <div class="task-meta">
           <span class="pill pill-xp">+${task.xp_reward} XP</span>
           <span class="pill pill-gold">+${task.gold_reward}g</span>
@@ -147,11 +162,34 @@ export function renderTaskList(cat) {
         <button class="task-action-btn danger" title="Delete" onclick="event.stopPropagation();window._confirmDeleteTask('${task.id}',this.closest('.task'))">🗑️</button>
       </div>
     `;
+    // Only allow direct toggle if no subtasks (subtask-driven tasks auto-complete)
     div.onclick = (e) => {
       if (e.target.closest('.task-actions')) return;
-      window._toggleTask(e, task.id, div);
+      if (!hasSubtasks) window._toggleTask(e, task.id, div);
     };
     el.appendChild(div);
+
+    // Render subtasks indented below parent
+    if (hasSubtasks) {
+      const wrap = document.createElement('div');
+      wrap.className = 'task-subtask-wrap';
+      children.forEach(sub => {
+        const subDone = todayCompletions.has(sub.id);
+        const subDiv = document.createElement('div');
+        subDiv.className = 'task subtask' + (subDone ? ' done' : '');
+        subDiv.innerHTML = `
+          <div class="task-check"><div class="check-icon">✓</div></div>
+          <div class="task-body">
+            <div class="task-name">${escapeHtml(sub.name)}</div>
+          </div>
+        `;
+        subDiv.onclick = (e) => {
+          window._toggleTask(e, sub.id, subDiv);
+        };
+        wrap.appendChild(subDiv);
+      });
+      el.appendChild(wrap);
+    }
   });
 }
 

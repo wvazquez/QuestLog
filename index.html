@@ -334,17 +334,6 @@
       <button class="diff-btn" data-diff="hard" onclick="selectDiff('hard')">💀 Hard</button>
     </div>
 
-    <div class="modal-row">
-      <div class="modal-row-item">
-        <label class="modal-field-label">XP Reward</label>
-        <input class="modal-input modal-input-sm" type="number" id="taskXP" min="1" max="999" placeholder="50">
-      </div>
-      <div class="modal-row-item">
-        <label class="modal-field-label">Gold Reward</label>
-        <input class="modal-input modal-input-sm" type="number" id="taskGold" min="1" max="999" placeholder="25">
-      </div>
-    </div>
-
     <!-- Weekly: days of week -->
     <div id="taskDaysSection" style="display:none">
       <label class="modal-field-label">Repeat On <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(leave blank = every day)</span></label>
@@ -356,6 +345,16 @@
         <label class="day-btn"><input type="checkbox" value="5"><span>Fri</span></label>
         <label class="day-btn"><input type="checkbox" value="6"><span>Sat</span></label>
         <label class="day-btn"><input type="checkbox" value="0"><span>Sun</span></label>
+      </div>
+    </div>
+
+    <!-- Weekly: subtasks -->
+    <div id="taskSubtasksSection" style="display:none">
+      <label class="modal-field-label">Subtasks <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(complete all to finish the routine)</span></label>
+      <div id="subtaskList"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input class="modal-input" type="text" id="newSubtaskInput" placeholder="Add a subtask..." maxlength="60" style="margin-bottom:0;flex:1">
+        <button class="add-btn" style="width:38px;height:38px;font-size:20px;border-radius:10px" onclick="addSubtaskToModal()">+</button>
       </div>
     </div>
 

@@ -1,4 +1,4 @@
-import './styles/auth.css'
+import './styles/auth.scss'
 import { sb } from './lib/supabase.js'
 
 // ── READ MODE FROM URL ──────────────────────────────────────

@@ -32,6 +32,7 @@ create table if not exists tasks (
   days_of_week integer[] default null, -- e.g. {1,3,5} = Mon,Wed,Fri for weekly tasks
   is_active boolean not null default true,
   sort_order integer default 0,
+  parent_id uuid default null references tasks(id) on delete cascade, -- weekly subtask hierarchy
   created_at timestamptz default now()
 );
 
