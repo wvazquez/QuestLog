@@ -1,10 +1,12 @@
 /**
  * Task CRUD — create, edit, delete tasks. Modal management.
+ * Includes subtask support for weekly routines (parent-child hierarchy).
  */
 
 import { sb } from '../lib/supabase.js';
 import * as store from '../lib/store.js';
 import * as events from '../lib/events.js';
+import { escapeHtml } from '../lib/utils.js';
 import { showToast } from './ui.js';
 
 const DIFF_DEFAULTS = {
@@ -18,6 +20,9 @@ let editingTaskId = null;
 let selectedDiff = 'med';
 let selectedPriority = 'P1';
 
+// Subtask state for the modal
+let modalSubtasks = []; // [{name, id?}] — id present for existing subtasks
+
 export function openTaskModal(cat, task = null) {
   taskModalCat = cat;
   editingTaskId = task ? task.id : null;
@@ -28,10 +33,6 @@ export function openTaskModal(cat, task = null) {
   selectedDiff = task ? (task.difficulty || 'med') : 'med';
   renderDiffPicker();
 
-  const def = DIFF_DEFAULTS[selectedDiff];
-  document.getElementById('taskXP').value = task ? task.xp_reward : def.xp;
-  document.getElementById('taskGold').value = task ? task.gold_reward : def.gold;
-
   const daysSection = document.getElementById('taskDaysSection');
   daysSection.style.display = cat === 'weekly' ? 'block' : 'none';
   if (cat === 'weekly') {
@@ -40,6 +41,22 @@ export function openTaskModal(cat, task = null) {
       cb.checked = days.includes(parseInt(cb.value));
     });
   }
+
+  // Subtasks section — show for weekly parent tasks (not subtasks themselves)
+  const subtasksSection = document.getElementById('taskSubtasksSection');
+  const isSubtask = task?.parent_id;
+  const showSubtasks = cat === 'weekly' && !isSubtask;
+  subtasksSection.style.display = showSubtasks ? 'block' : 'none';
+  modalSubtasks = [];
+  if (showSubtasks && editingTaskId) {
+    // Load existing subtasks from store
+    const tasks = store.get('tasks');
+    const children = tasks.weekly.filter(t => t.parent_id === editingTaskId);
+    modalSubtasks = children.map(t => ({ name: t.name, id: t.id }));
+  }
+  renderModalSubtasks();
+  const subtaskInput = document.getElementById('newSubtaskInput');
+  if (subtaskInput) subtaskInput.value = '';
 
   const prioritySection = document.getElementById('taskPrioritySection');
   prioritySection.style.display = cat === 'backlog' ? 'block' : 'none';
@@ -56,14 +73,12 @@ export function closeTaskModal(e) {
   if (e && e.target !== document.getElementById('taskModalOverlay')) return;
   document.getElementById('taskModalOverlay').classList.remove('open');
   editingTaskId = null;
+  modalSubtasks = [];
 }
 
 export function selectDiff(diff) {
   selectedDiff = diff;
   renderDiffPicker();
-  const def = DIFF_DEFAULTS[diff];
-  document.getElementById('taskXP').value = def.xp;
-  document.getElementById('taskGold').value = def.gold;
 }
 
 function renderDiffPicker() {
@@ -83,13 +98,47 @@ function renderPriorityPicker() {
   });
 }
 
+// ── Subtask modal helpers ──
+
+export function addSubtaskToModal() {
+  const input = document.getElementById('newSubtaskInput');
+  const name = input.value.trim();
+  if (!name) return;
+  modalSubtasks.push({ name });
+  input.value = '';
+  renderModalSubtasks();
+  input.focus();
+}
+
+export function removeSubtaskFromModal(index) {
+  modalSubtasks.splice(index, 1);
+  renderModalSubtasks();
+}
+
+export function renderModalSubtasks() {
+  const list = document.getElementById('subtaskList');
+  if (!list) return;
+  if (modalSubtasks.length === 0) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = modalSubtasks.map((st, i) => `
+    <div class="modal-subtask-row">
+      <span class="modal-subtask-name">${escapeHtml(st.name)}</span>
+      <button class="task-action-btn danger" title="Remove" onclick="removeSubtaskFromModal(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+// ── Save task ──
+
 export async function saveTask() {
   const name = document.getElementById('taskName').value.trim();
   if (!name) { showToast('Please enter a task name.'); return; }
 
   const USER_ID = store.get('USER_ID');
-  const xp = parseInt(document.getElementById('taskXP').value) || DIFF_DEFAULTS[selectedDiff].xp;
-  const gold = parseFloat(document.getElementById('taskGold').value) || DIFF_DEFAULTS[selectedDiff].gold;
+  const xp = DIFF_DEFAULTS[selectedDiff].xp;
+  const gold = DIFF_DEFAULTS[selectedDiff].gold;
 
   let days_of_week = null;
   if (taskModalCat === 'weekly') {
@@ -114,26 +163,75 @@ export async function saveTask() {
   btn.disabled = true;
 
   let error;
+  let parentId = editingTaskId;
+
   if (editingTaskId) {
     ({ error } = await sb.from('tasks').update(payload).eq('id', editingTaskId).eq('user_id', USER_ID));
   } else {
-    ({ error } = await sb.from('tasks').insert(payload));
+    const { data, error: insertErr } = await sb.from('tasks').insert(payload).select('id').single();
+    error = insertErr;
+    if (data) parentId = data.id;
   }
 
   btn.disabled = false;
   if (error) { showToast('❌ Failed to save task.'); return; }
+
+  // Handle subtasks for weekly parent tasks
+  if (taskModalCat === 'weekly' && parentId) {
+    await syncSubtasks(parentId, USER_ID, days_of_week);
+  }
 
   document.getElementById('taskModalOverlay').classList.remove('open');
   showToast(editingTaskId ? '✓ Task updated!' : '✓ Task added!');
   events.emit('state:reload');
 }
 
+/**
+ * Sync subtasks: create new ones, soft-delete removed ones.
+ */
+async function syncSubtasks(parentId, userId, daysOfWeek) {
+  const tasks = store.get('tasks');
+  const existingChildren = tasks.weekly.filter(t => t.parent_id === parentId);
+  const existingIds = new Set(existingChildren.map(t => t.id));
+  const keptIds = new Set(modalSubtasks.filter(st => st.id).map(st => st.id));
+
+  // Soft-delete removed subtasks
+  const toRemove = [...existingIds].filter(id => !keptIds.has(id));
+  if (toRemove.length > 0) {
+    await sb.from('tasks').update({ is_active: false }).in('id', toRemove).eq('user_id', userId);
+  }
+
+  // Insert new subtasks
+  const toInsert = modalSubtasks
+    .filter(st => !st.id)
+    .map(st => ({
+      user_id: userId,
+      name: st.name,
+      category: 'weekly',
+      difficulty: selectedDiff,
+      xp_reward: DIFF_DEFAULTS[selectedDiff].xp,
+      gold_reward: DIFF_DEFAULTS[selectedDiff].gold,
+      is_active: true,
+      parent_id: parentId,
+      days_of_week: daysOfWeek,
+    }));
+
+  if (toInsert.length > 0) {
+    await sb.from('tasks').insert(toInsert);
+  }
+}
+
 export async function deleteTask(id) {
   const USER_ID = store.get('USER_ID');
-  const { error } = await sb.from('tasks').update({ is_active: false }).eq('id', id).eq('user_id', USER_ID);
+  // Also deactivate child subtasks
+  const tasks = store.get('tasks');
+  const children = tasks.weekly.filter(t => t.parent_id === id);
+  const idsToDelete = [id, ...children.map(t => t.id)];
+
+  const { error } = await sb.from('tasks').update({ is_active: false }).in('id', idsToDelete).eq('user_id', USER_ID);
   if (error) { showToast('❌ Failed to delete task.'); return; }
   const todayCompletions = store.get('todayCompletions');
-  todayCompletions.delete(id);
+  idsToDelete.forEach(tid => todayCompletions.delete(tid));
   store.set('todayCompletions', new Set(todayCompletions));
   events.emit('state:reload');
   showToast('Task removed.');

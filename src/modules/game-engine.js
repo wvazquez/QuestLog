@@ -110,6 +110,37 @@ export async function toggleTask(e, taskId, el) {
       showToast('✨ ' + mult + '× streak bonus! +' + earnedXP + ' XP');
     }
 
+    // Auto-complete parent if all subtasks are done
+    if (task.parent_id) {
+      const allWeekly = tasks.weekly;
+      const siblings = allWeekly.filter(t => t.parent_id === task.parent_id);
+      const allSiblingsDone = siblings.length > 0 && siblings.every(t => todayCompletions.has(t.id));
+      if (allSiblingsDone && !todayCompletions.has(task.parent_id)) {
+        const parent = allWeekly.find(t => t.id === task.parent_id);
+        if (parent) {
+          const parentMult = getStreakMultiplier(character.streak || 0);
+          const parentXP = Math.round(parent.xp_reward * parentMult);
+          todayCompletions.add(parent.id);
+          store.set('todayCompletions', new Set(todayCompletions));
+          character.xp = (character.xp || 0) + parentXP;
+          character.gold = parseFloat(character.gold || 0) + parseFloat(parent.gold_reward);
+          character.total_completed = (character.total_completed || 0) + 1;
+          checkLevelUp();
+          store.set('character', { ...character });
+          await sb.from('completions').insert({
+            user_id: USER_ID, task_id: parent.id,
+            xp_earned: parentXP, gold_earned: parent.gold_reward,
+            completed_date: todayStr(),
+          });
+          await sb.from('character').update({
+            xp: character.xp, gold: character.gold,
+            total_completed: character.total_completed,
+          }).eq('user_id', USER_ID);
+          showToast('🎯 All subtasks done! Routine completed! +' + parentXP + ' XP');
+        }
+      }
+    }
+
   } else {
     // Undo (daily/weekly only)
     todayCompletions.delete(taskId);

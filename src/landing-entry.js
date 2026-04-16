@@ -1,4 +1,4 @@
-import './styles/landing.css'
+import './styles/landing.scss'
 
 // ═══════════════════════════════
 // PARTICLE SYSTEM

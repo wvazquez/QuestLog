@@ -1,4 +1,4 @@
-import './styles/app.css'
+import './styles/app.scss'
 
 // ── Infrastructure: reactive subscriptions ───────────────
 import { init as initRender } from './modules/render.js'
@@ -18,6 +18,7 @@ import { buyReward } from './modules/rewards.js'
 import {
   openTaskModal, closeTaskModal, selectDiff, selectPriority,
   saveTask, deleteTask, confirmDeleteTask, cancelDelete, taskById,
+  addSubtaskToModal, removeSubtaskFromModal,
 } from './modules/tasks.js'
 import { toggleTask, toggleArchive, permanentDeleteTask } from './modules/game-engine.js'
 import {
@@ -56,6 +57,7 @@ Object.assign(window, {
   _confirmDeleteTask: confirmDeleteTask, _cancelDelete: cancelDelete,
   _taskById: taskById,
   _toggleTask: toggleTask,
+  addSubtaskToModal, removeSubtaskFromModal,
   // Archive
   toggleArchive, _permanentDeleteTask: permanentDeleteTask,
   // Goal CRUD
