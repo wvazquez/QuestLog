@@ -29,7 +29,7 @@ import {
 import { calPrev, calNext } from './modules/calendar.js'
 import { toggleLeaderboard } from './modules/leaderboard.js'
 import { loadAdminData } from './modules/admin.js'
-import { toggleShowAllWeekly } from './modules/render.js'
+import { toggleShowAllWeekly, toggleRoutineCollapse } from './modules/render.js'
 import { renderCalendar } from './modules/calendar.js'
 import { loadLeaderboard } from './modules/leaderboard.js'
 
@@ -70,6 +70,7 @@ Object.assign(window, {
   // Sections
   toggleSectionCollapse,
   toggleShowAllWeekly,
+  _toggleRoutineCollapse: toggleRoutineCollapse,
   // Calendar
   calPrev, calNext,
   toggleCalRoutines: () => toggleSectionCollapse('cal-routines'),
