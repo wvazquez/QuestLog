@@ -357,7 +357,10 @@ export function renderCompleted() {
               ${t.priority ? `<span class="pill pill-${t.priority.toLowerCase()}">${t.priority}</span>` : ''}
             </div>
           </div>
-          <button class="task-action-btn danger" title="Permanently delete" onclick="window._permanentDeleteTask('${t.id}')">🗑️</button>
+          <div class="archive-task-actions">
+            <button class="task-action-btn archive-restore-btn" title="Restore to active" onclick="window._restoreArchivedTask('${t.id}')">↩</button>
+            <button class="task-action-btn danger" title="Permanently delete" onclick="window._permanentDeleteTask('${t.id}')">🗑️</button>
+          </div>
         </div>`).join('')}`;
   }).join('');
 }
