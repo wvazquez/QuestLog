@@ -170,12 +170,42 @@ export async function toggleTask(e, taskId, el) {
     el.classList.remove('done');
     character.xp = Math.max(0, (character.xp || 0) - task.xp_reward);
     character.gold = Math.max(0, parseFloat(character.gold || 0) - parseFloat(task.gold_reward));
+    character.total_completed = Math.max(0, (character.total_completed || 0) - 1);
     store.set('character', { ...character });
 
-    await Promise.all([
+    const undoOps = [
       sb.from('completions').delete().eq('user_id', USER_ID).eq('task_id', taskId).eq('completed_date', todayStr()),
-      sb.from('character').update({ xp: character.xp, gold: character.gold }).eq('user_id', USER_ID)
-    ]);
+    ];
+
+    // If this was a subtask and the parent was auto-completed, reverse the parent too.
+    if (task.parent_id && todayCompletions.has(task.parent_id)) {
+      const parent = tasks.weekly.find(t => t.id === task.parent_id);
+      if (parent) {
+        todayCompletions.delete(task.parent_id);
+        store.set('todayCompletions', new Set(todayCompletions));
+        character.xp = Math.max(0, (character.xp || 0) - parent.xp_reward);
+        character.gold = Math.max(0, parseFloat(character.gold || 0) - parseFloat(parent.gold_reward));
+        character.total_completed = Math.max(0, (character.total_completed || 0) - 1);
+        store.set('character', { ...character });
+        undoOps.push(
+          sb.from('completions').delete()
+            .eq('user_id', USER_ID)
+            .eq('task_id', task.parent_id)
+            .eq('completed_date', todayStr())
+        );
+      }
+    }
+
+    undoOps.push(
+      sb.from('character').update({
+        xp: character.xp,
+        gold: character.gold,
+        total_completed: character.total_completed,
+      }).eq('user_id', USER_ID)
+    );
+
+    events.emit('render:all');
+    await Promise.all(undoOps);
   }
 
   setSyncState('live', 'Live sync');
