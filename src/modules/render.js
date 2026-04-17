@@ -12,6 +12,39 @@ const CIRC = 176;
 
 let showAllWeekly = false;
 
+const COLLAPSED_ROUTINES_KEY = 'questlog:collapsedRoutines';
+
+function loadCollapsedRoutines() {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_ROUTINES_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCollapsedRoutines(set) {
+  try {
+    localStorage.setItem(COLLAPSED_ROUTINES_KEY, JSON.stringify([...set]));
+  } catch {
+    // quota / private mode — silently ignore, collapse state is non-critical
+  }
+}
+
+let collapsedRoutines = loadCollapsedRoutines();
+
+export function toggleRoutineCollapse(parentId) {
+  if (collapsedRoutines.has(parentId)) {
+    collapsedRoutines.delete(parentId);
+  } else {
+    collapsedRoutines.add(parentId);
+  }
+  saveCollapsedRoutines(collapsedRoutines);
+  renderTaskList('weekly');
+}
+
 export function toggleShowAllWeekly() {
   showAllWeekly = !showAllWeekly;
   const btn = document.getElementById('showAllWeeklyBtn');
