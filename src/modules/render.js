@@ -191,7 +191,7 @@ export function renderTaskList(cat) {
     const habit = habits[task.id] || {};
     const isCollapsed = hasSubtasks && collapsedRoutines.has(task.id);
     const div = document.createElement('div');
-    div.className = 'task' + (done ? ' done' : '') + (hasSubtasks ? ' has-subtasks' : '') + (isCollapsed ? ' collapsed' : '');
+    div.className = 'task' + (done ? ' done' : '');
     div.innerHTML = `
       <div class="task-check"><div class="check-icon">✓</div></div>
       <div class="task-body">

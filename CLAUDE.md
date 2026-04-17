@@ -61,8 +61,8 @@ Cross-module communication without direct imports. Key events:
 | Module | Role | Lines |
 |--------|------|-------|
 | `modules/boot.js` | Auth check, data loading, realtime subscription | ~120 |
-| `modules/render.js` | All DOM rendering functions, reactive subscriptions | ~330 |
-| `modules/game-engine.js` | Core completion loop, XP/streak logic, archive | ~200 |
+| `modules/render.js` | All DOM rendering functions, reactive subscriptions, collapsed-routine persistence | ~420 |
+| `modules/game-engine.js` | Core completion loop, XP/streak logic, archive, restore | ~350 |
 | `modules/tasks.js` | Task CRUD modal management | ~160 |
 | `modules/goals.js` | Goal CRUD modal management | ~130 |
 | `modules/calendar.js` | Monthly calendar view | ~120 |
