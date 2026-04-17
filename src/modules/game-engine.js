@@ -300,12 +300,6 @@ export async function restoreArchivedTask(id) {
 
   setSyncState('saving', 'Saving...');
 
-  const character = store.get('character');
-  character.xp = Math.max(0, (character.xp || 0) - (task.xp_reward || 0));
-  character.gold = Math.max(0, parseFloat(character.gold || 0) - parseFloat(task.gold_reward || 0));
-  character.total_completed = Math.max(0, (character.total_completed || 0) - 1);
-  store.set('character', { ...character });
-
   // Completion-date key is the archive date in YYYY-MM-DD.
   const archiveDate = (task.completed_at || task.archived_at || '').slice(0, 10);
 
@@ -320,6 +314,13 @@ export async function restoreArchivedTask(id) {
     setSyncState('error', 'Error');
     return;
   }
+
+  // Task update succeeded. Now mutate character.
+  const character = store.get('character');
+  character.xp = Math.max(0, (character.xp || 0) - (task.xp_reward || 0));
+  character.gold = Math.max(0, parseFloat(character.gold || 0) - parseFloat(task.gold_reward || 0));
+  character.total_completed = Math.max(0, (character.total_completed || 0) - 1);
+  store.set('character', { ...character });
 
   await Promise.all([
     sb.from('completions').delete()
