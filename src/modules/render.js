@@ -189,8 +189,9 @@ export function renderTaskList(cat) {
     const childrenDone = children.filter(t => todayCompletions.has(t.id)).length;
     const done = todayCompletions.has(task.id);
     const habit = habits[task.id] || {};
+    const isCollapsed = hasSubtasks && collapsedRoutines.has(task.id);
     const div = document.createElement('div');
-    div.className = 'task' + (done ? ' done' : '');
+    div.className = 'task' + (done ? ' done' : '') + (hasSubtasks ? ' has-subtasks' : '') + (isCollapsed ? ' collapsed' : '');
     div.innerHTML = `
       <div class="task-check"><div class="check-icon">✓</div></div>
       <div class="task-body">
@@ -205,6 +206,7 @@ export function renderTaskList(cat) {
       </div>
       <div class="diff-dot diff-${task.difficulty}"></div>
       <div class="task-actions">
+        ${hasSubtasks ? `<button class="task-action-btn routine-chevron${isCollapsed ? '' : ' open'}" title="${isCollapsed ? 'Expand' : 'Collapse'}" onclick="event.stopPropagation();window._toggleRoutineCollapse('${task.id}')">▸</button>` : ''}
         <button class="task-action-btn task-edit-btn" title="Edit" onclick="event.stopPropagation();window.openTaskModal('${cat}',window._taskById('${task.id}'))">✏️</button>
         <button class="task-action-btn danger task-delete-btn" title="Delete" onclick="event.stopPropagation();window._confirmDeleteTask('${task.id}',this.closest('.task'))">🗑️</button>
       </div>
@@ -216,8 +218,8 @@ export function renderTaskList(cat) {
     };
     el.appendChild(div);
 
-    // Render subtasks indented below parent
-    if (hasSubtasks) {
+    // Render subtasks indented below parent (unless collapsed)
+    if (hasSubtasks && !isCollapsed) {
       const wrap = document.createElement('div');
       wrap.className = 'task-subtask-wrap';
       children.forEach(sub => {
