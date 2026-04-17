@@ -82,12 +82,12 @@ export async function loadAll() {
 
   const all = tasksRes.data || [];
   store.set('tasks', {
-    daily: all.filter(t => t.category === 'daily'),
+    daily: all.filter(t => t.category === 'daily' && !t.archived_at),
     weekly: all.filter(t => t.category === 'weekly'),
     backlog: all.filter(t => t.category === 'backlog' && !t.archived_at),
   });
   store.set('archivedBacklog',
-    all.filter(t => t.category === 'backlog' && t.archived_at)
+    all.filter(t => (t.category === 'backlog' || t.category === 'daily') && t.archived_at)
       .sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at))
   );
 }
