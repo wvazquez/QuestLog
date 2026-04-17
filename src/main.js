@@ -21,7 +21,7 @@ import {
   addSubtaskToModal, removeSubtaskFromModal, deleteTaskFromModal,
   moveBacklogToDaily,
 } from './modules/tasks.js'
-import { toggleTask, toggleArchive, permanentDeleteTask } from './modules/game-engine.js'
+import { toggleTask, toggleArchive, permanentDeleteTask, restoreArchivedTask } from './modules/game-engine.js'
 import {
   openGoalModal, closeGoalModal, selectGoalDiff, saveGoal,
   deleteGoal, completeGoal, goalById,
@@ -29,7 +29,7 @@ import {
 import { calPrev, calNext } from './modules/calendar.js'
 import { toggleLeaderboard } from './modules/leaderboard.js'
 import { loadAdminData } from './modules/admin.js'
-import { toggleShowAllWeekly } from './modules/render.js'
+import { toggleShowAllWeekly, toggleRoutineCollapse } from './modules/render.js'
 import { renderCalendar } from './modules/calendar.js'
 import { loadLeaderboard } from './modules/leaderboard.js'
 
@@ -61,13 +61,16 @@ Object.assign(window, {
   _toggleTask: toggleTask,
   addSubtaskToModal, removeSubtaskFromModal, deleteTaskFromModal, moveBacklogToDaily,
   // Archive
-  toggleArchive, _permanentDeleteTask: permanentDeleteTask,
+  toggleArchive,
+  _permanentDeleteTask: permanentDeleteTask,
+  _restoreArchivedTask: restoreArchivedTask,
   // Goal CRUD
   openGoalModal, closeGoalModal, selectGoalDiff, saveGoal,
   _deleteGoal: deleteGoal, _completeGoal: completeGoal, _goalById: goalById,
   // Sections
   toggleSectionCollapse,
   toggleShowAllWeekly,
+  _toggleRoutineCollapse: toggleRoutineCollapse,
   // Calendar
   calPrev, calNext,
   toggleCalRoutines: () => toggleSectionCollapse('cal-routines'),

@@ -433,3 +433,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   .goal-card { padding: 18px; }
   .section-title { font-size: 13px; }
 }
+
+/* ── Archive restore button ── */
+.archive-task-actions { display: flex; gap: 4px; align-items: center; }
+.archive-restore-btn {
+  color: var(--accent3);
+  font-size: 14px;
+  font-weight: 700;
+}
+.archive-restore-btn:hover { background: rgba(46,196,182,0.12); }
+
+/* ── Routine collapse chevron ── */
+.routine-chevron {
+  font-size: 12px;
+  transition: transform 0.15s ease;
+  color: var(--muted);
+}
+.routine-chevron.open { transform: rotate(90deg); }
+.routine-chevron:hover { color: var(--text); }

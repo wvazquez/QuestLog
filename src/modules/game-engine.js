@@ -170,12 +170,42 @@ export async function toggleTask(e, taskId, el) {
     el.classList.remove('done');
     character.xp = Math.max(0, (character.xp || 0) - task.xp_reward);
     character.gold = Math.max(0, parseFloat(character.gold || 0) - parseFloat(task.gold_reward));
+    character.total_completed = Math.max(0, (character.total_completed || 0) - 1);
     store.set('character', { ...character });
 
-    await Promise.all([
+    const undoOps = [
       sb.from('completions').delete().eq('user_id', USER_ID).eq('task_id', taskId).eq('completed_date', todayStr()),
-      sb.from('character').update({ xp: character.xp, gold: character.gold }).eq('user_id', USER_ID)
-    ]);
+    ];
+
+    // If this was a subtask and the parent was auto-completed, reverse the parent too.
+    if (task.parent_id && todayCompletions.has(task.parent_id)) {
+      const parent = tasks.weekly.find(t => t.id === task.parent_id);
+      if (parent) {
+        todayCompletions.delete(task.parent_id);
+        store.set('todayCompletions', new Set(todayCompletions));
+        character.xp = Math.max(0, (character.xp || 0) - parent.xp_reward);
+        character.gold = Math.max(0, parseFloat(character.gold || 0) - parseFloat(parent.gold_reward));
+        character.total_completed = Math.max(0, (character.total_completed || 0) - 1);
+        store.set('character', { ...character });
+        undoOps.push(
+          sb.from('completions').delete()
+            .eq('user_id', USER_ID)
+            .eq('task_id', task.parent_id)
+            .eq('completed_date', todayStr())
+        );
+      }
+    }
+
+    undoOps.push(
+      sb.from('character').update({
+        xp: character.xp,
+        gold: character.gold,
+        total_completed: character.total_completed,
+      }).eq('user_id', USER_ID)
+    );
+
+    events.emit('render:all');
+    await Promise.all(undoOps);
   }
 
   setSyncState('live', 'Live sync');
@@ -253,4 +283,65 @@ export async function permanentDeleteTask(id) {
   const archivedBacklog = store.get('archivedBacklog').filter(t => t.id !== id);
   store.set('archivedBacklog', archivedBacklog);
   showToast('Task permanently deleted.');
+}
+
+/**
+ * Restore an archived task: clear archive fields, reverse XP/gold/total_completed,
+ * delete the completion row for the archive date, move the task back to its active
+ * category list. Used by the Undo button in the Completed section.
+ */
+export async function restoreArchivedTask(id) {
+  const USER_ID = store.get('USER_ID');
+  const archivedBacklog = store.get('archivedBacklog');
+  const task = archivedBacklog.find(t => t.id === id);
+  if (!task) return;
+
+  if (!confirm(`Restore "${task.name}" to active? This will reverse the XP and gold awarded.`)) return;
+
+  setSyncState('saving', 'Saving...');
+
+  // Completion-date key is the archive date in YYYY-MM-DD.
+  const archiveDate = (task.completed_at || task.archived_at || '').slice(0, 10);
+
+  const { error } = await sb.from('tasks').update({
+    completed_at: null,
+    archived_at: null,
+    archive_month: null,
+  }).eq('id', id).eq('user_id', USER_ID);
+
+  if (error) {
+    showToast('❌ Failed to restore task.');
+    setSyncState('error', 'Error');
+    return;
+  }
+
+  // Task update succeeded. Now mutate character.
+  const character = store.get('character');
+  character.xp = Math.max(0, (character.xp || 0) - (task.xp_reward || 0));
+  character.gold = Math.max(0, parseFloat(character.gold || 0) - parseFloat(task.gold_reward || 0));
+  character.total_completed = Math.max(0, (character.total_completed || 0) - 1);
+  store.set('character', { ...character });
+
+  await Promise.all([
+    sb.from('completions').delete()
+      .eq('user_id', USER_ID)
+      .eq('task_id', id)
+      .eq('completed_date', archiveDate),
+    sb.from('character').update({
+      xp: character.xp,
+      gold: character.gold,
+      total_completed: character.total_completed,
+    }).eq('user_id', USER_ID),
+  ]);
+
+  // Update local state: remove from archivedBacklog, re-insert into tasks[category].
+  store.set('archivedBacklog', archivedBacklog.filter(t => t.id !== id));
+  const tasks = store.get('tasks');
+  const restored = { ...task, archived_at: null, archive_month: null, completed_at: null };
+  tasks[task.category] = [...(tasks[task.category] || []), restored];
+  store.set('tasks', { ...tasks });
+
+  setSyncState('live', 'Live sync');
+  showToast('↩ Restored to ' + task.category + '.');
+  events.emit('task:completed');
 }

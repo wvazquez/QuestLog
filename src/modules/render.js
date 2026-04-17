@@ -12,6 +12,39 @@ const CIRC = 176;
 
 let showAllWeekly = false;
 
+const COLLAPSED_ROUTINES_KEY = 'questlog:collapsedRoutines';
+
+function loadCollapsedRoutines() {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_ROUTINES_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCollapsedRoutines(set) {
+  try {
+    localStorage.setItem(COLLAPSED_ROUTINES_KEY, JSON.stringify([...set]));
+  } catch {
+    // quota / private mode — silently ignore, collapse state is non-critical
+  }
+}
+
+let collapsedRoutines = loadCollapsedRoutines();
+
+export function toggleRoutineCollapse(parentId) {
+  if (collapsedRoutines.has(parentId)) {
+    collapsedRoutines.delete(parentId);
+  } else {
+    collapsedRoutines.add(parentId);
+  }
+  saveCollapsedRoutines(collapsedRoutines);
+  renderTaskList('weekly');
+}
+
 export function toggleShowAllWeekly() {
   showAllWeekly = !showAllWeekly;
   const btn = document.getElementById('showAllWeeklyBtn');
@@ -156,6 +189,7 @@ export function renderTaskList(cat) {
     const childrenDone = children.filter(t => todayCompletions.has(t.id)).length;
     const done = todayCompletions.has(task.id);
     const habit = habits[task.id] || {};
+    const isCollapsed = hasSubtasks && collapsedRoutines.has(task.id);
     const div = document.createElement('div');
     div.className = 'task' + (done ? ' done' : '');
     div.innerHTML = `
@@ -172,6 +206,7 @@ export function renderTaskList(cat) {
       </div>
       <div class="diff-dot diff-${task.difficulty}"></div>
       <div class="task-actions">
+        ${hasSubtasks ? `<button class="task-action-btn routine-chevron${isCollapsed ? '' : ' open'}" title="${isCollapsed ? 'Expand' : 'Collapse'}" onclick="event.stopPropagation();window._toggleRoutineCollapse('${task.id}')">▸</button>` : ''}
         <button class="task-action-btn task-edit-btn" title="Edit" onclick="event.stopPropagation();window.openTaskModal('${cat}',window._taskById('${task.id}'))">✏️</button>
         <button class="task-action-btn danger task-delete-btn" title="Delete" onclick="event.stopPropagation();window._confirmDeleteTask('${task.id}',this.closest('.task'))">🗑️</button>
       </div>
@@ -183,8 +218,8 @@ export function renderTaskList(cat) {
     };
     el.appendChild(div);
 
-    // Render subtasks indented below parent
-    if (hasSubtasks) {
+    // Render subtasks indented below parent (unless collapsed)
+    if (hasSubtasks && !isCollapsed) {
       const wrap = document.createElement('div');
       wrap.className = 'task-subtask-wrap';
       children.forEach(sub => {
@@ -357,7 +392,10 @@ export function renderCompleted() {
               ${t.priority ? `<span class="pill pill-${t.priority.toLowerCase()}">${t.priority}</span>` : ''}
             </div>
           </div>
-          <button class="task-action-btn danger" title="Permanently delete" onclick="window._permanentDeleteTask('${t.id}')">🗑️</button>
+          <div class="archive-task-actions">
+            <button class="task-action-btn archive-restore-btn" title="Restore to active" onclick="window._restoreArchivedTask('${t.id}')">↩</button>
+            <button class="task-action-btn danger" title="Permanently delete" onclick="window._permanentDeleteTask('${t.id}')">🗑️</button>
+          </div>
         </div>`).join('')}`;
   }).join('');
 }
