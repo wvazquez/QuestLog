@@ -21,7 +21,7 @@ import {
   addSubtaskToModal, removeSubtaskFromModal, deleteTaskFromModal,
   moveBacklogToDaily,
 } from './modules/tasks.js'
-import { toggleTask, toggleArchive, permanentDeleteTask } from './modules/game-engine.js'
+import { toggleTask, toggleArchive, permanentDeleteTask, restoreArchivedTask } from './modules/game-engine.js'
 import {
   openGoalModal, closeGoalModal, selectGoalDiff, saveGoal,
   deleteGoal, completeGoal, goalById,
@@ -61,7 +61,9 @@ Object.assign(window, {
   _toggleTask: toggleTask,
   addSubtaskToModal, removeSubtaskFromModal, deleteTaskFromModal, moveBacklogToDaily,
   // Archive
-  toggleArchive, _permanentDeleteTask: permanentDeleteTask,
+  toggleArchive,
+  _permanentDeleteTask: permanentDeleteTask,
+  _restoreArchivedTask: restoreArchivedTask,
   // Goal CRUD
   openGoalModal, closeGoalModal, selectGoalDiff, saveGoal,
   _deleteGoal: deleteGoal, _completeGoal: completeGoal, _goalById: goalById,
