@@ -26,7 +26,7 @@ import {
   openGoalModal, closeGoalModal, selectGoalDiff, saveGoal,
   deleteGoal, completeGoal, goalById,
 } from './modules/goals.js'
-import { calPrev, calNext } from './modules/calendar.js'
+import { calPrev, calNext, toggleCalRoutineExpand } from './modules/calendar.js'
 import { toggleLeaderboard } from './modules/leaderboard.js'
 import { loadAdminData } from './modules/admin.js'
 import { toggleShowAllWeekly, toggleRoutineCollapse } from './modules/render.js'
@@ -74,6 +74,7 @@ Object.assign(window, {
   // Calendar
   calPrev, calNext,
   toggleCalRoutines: () => toggleSectionCollapse('cal-routines'),
+  toggleCalRoutineExpand,
   // Leaderboard
   toggleLeaderboard,
 })

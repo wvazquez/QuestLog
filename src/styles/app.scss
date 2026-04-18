@@ -373,6 +373,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .cal-detail-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .cal-routine-header{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
 .cal-routine-header:hover{color:var(--text)}
+.cal-detail-subtask{padding-left:22px}
+.cal-routine-chevron{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0 4px;margin-left:6px;transition:transform 0.15s ease}
+.cal-routine-chevron.open{transform:rotate(90deg)}
+.cal-routine-chevron:hover{color:var(--text)}
 
 /* ══════════════════════════════════════════════════════════
    PHASE 7 — Leaderboard
