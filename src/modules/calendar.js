@@ -63,6 +63,9 @@ export function renderCalendar() {
 }
 
 export function calSelectDay(day, dateStr, dow, goalsDue) {
+  if (day !== calSelectedDay) {
+    expandedCalRoutines.clear();
+  }
   calSelectedDay = day;
   const detail = document.getElementById('calDetail');
   const titleEl = document.getElementById('calDetailTitle');
@@ -154,6 +157,7 @@ export function calPrev() {
   calMonth--;
   if (calMonth < 0) { calMonth = 11; calYear--; }
   calSelectedDay = null;
+  expandedCalRoutines.clear();
   document.getElementById('calDetail').classList.remove('open');
   renderCalendar();
 }
@@ -162,6 +166,7 @@ export function calNext() {
   calMonth++;
   if (calMonth > 11) { calMonth = 0; calYear++; }
   calSelectedDay = null;
+  expandedCalRoutines.clear();
   document.getElementById('calDetail').classList.remove('open');
   renderCalendar();
 }
