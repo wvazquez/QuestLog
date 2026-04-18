@@ -10,6 +10,10 @@ let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth(); // 0-indexed
 let calSelectedDay = null;
 
+// Transient per-routine expand state for the detail panel. Resets on day
+// change, month change, and page reload — intentionally not persisted.
+const expandedCalRoutines = new Set();
+
 export function renderCalendar() {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   document.getElementById('calMonthLabel').textContent = months[calMonth] + ' ' + calYear;
@@ -55,10 +59,18 @@ export function renderCalendar() {
     grid.appendChild(cell);
   }
 
+  if (calSelectedDay === null
+      && today.getFullYear() === calYear
+      && today.getMonth() === calMonth) {
+    calSelectedDay = today.getDate();
+  }
   if (calSelectedDay !== null) calSelectDay(calSelectedDay, null, null, null);
 }
 
 export function calSelectDay(day, dateStr, dow, goalsDue) {
+  if (day !== calSelectedDay) {
+    expandedCalRoutines.clear();
+  }
   calSelectedDay = day;
   const detail = document.getElementById('calDetail');
   const titleEl = document.getElementById('calDetailTitle');
@@ -77,42 +89,71 @@ export function calSelectDay(day, dateStr, dow, goalsDue) {
 
   const selectedDate = new Date(calYear, calMonth, day);
   const isSelectedToday = selectedDate.toDateString() === new Date().toDateString();
+  const todayCompletions = store.get('todayCompletions');
   const dailies = isSelectedToday ? tasks.daily : [];
   const weeklies = tasks.weekly.filter(t => !t.days_of_week || t.days_of_week.length === 0 || t.days_of_week.includes(dow));
-  const allItems = [
-    ...dailies.map(t => ({ name: escapeHtml(t.name), type: 'daily', dot: 'daily' })),
-    ...weeklies.map(t => ({ name: escapeHtml(t.name), type: 'weekly', dot: 'weekly' })),
-    ...(goalsDue || []).map(g => ({ name: escapeHtml(g.title), type: 'goal deadline', dot: 'goal' })),
-  ];
+
+  // Split weekly routines into parents and subtasks keyed by parent_id.
+  const weeklyParents = weeklies.filter(t => !t.parent_id);
+  const weeklySubtaskMap = {};
+  weeklies.filter(t => t.parent_id).forEach(t => {
+    if (!weeklySubtaskMap[t.parent_id]) weeklySubtaskMap[t.parent_id] = [];
+    weeklySubtaskMap[t.parent_id].push(t);
+  });
 
   detail.classList.add('open');
   titleEl.textContent = new Date(calYear, calMonth, day)
     .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  if (!allItems.length) {
+  const hasAnything = dailies.length || weeklyParents.length || (goalsDue && goalsDue.length);
+
+  if (!hasAnything) {
     itemsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No tasks or deadlines.</div>';
   } else {
-    const dailyItems = allItems.filter(i => i.type === 'daily');
-    const weeklyItems = allItems.filter(i => i.type === 'weekly');
-    const goalItems = allItems.filter(i => i.type === 'goal deadline');
-
-    const renderItems = (items) => items.map(i => `
+    const renderFlatItem = (name, type, dot) => `
       <div class="cal-detail-item">
-        <div class="cal-detail-dot cal-dot ${i.dot}"></div>
-        <span>${escapeHtml(i.name)}</span>
-        <span style="margin-left:auto;font-size:11px;color:var(--muted)">${i.type}</span>
-      </div>`).join('');
+        <div class="cal-detail-dot cal-dot ${dot}"></div>
+        <span>${escapeHtml(name)}</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--muted)">${type}</span>
+      </div>`;
+
+    const renderRoutineParent = (parent) => {
+      const children = weeklySubtaskMap[parent.id] || [];
+      const hasSubtasks = children.length > 0;
+      const isExpanded = expandedCalRoutines.has(parent.id);
+      const progress = hasSubtasks && isSelectedToday
+        ? ` <span class="subtask-progress">(${children.filter(c => todayCompletions.has(c.id)).length}/${children.length})</span>`
+        : '';
+      const chevron = hasSubtasks
+        ? `<button class="cal-routine-chevron${isExpanded ? ' open' : ''}" title="${isExpanded ? 'Collapse' : 'Expand'}" onclick="event.stopPropagation();window.toggleCalRoutineExpand('${parent.id}')">▸</button>`
+        : '';
+      const parentRow = `
+        <div class="cal-detail-item">
+          <div class="cal-detail-dot cal-dot weekly"></div>
+          <span>${escapeHtml(parent.name)}${progress}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--muted)">weekly</span>
+          ${chevron}
+        </div>`;
+      const subtaskRows = (hasSubtasks && isExpanded)
+        ? children.map(sub => `
+            <div class="cal-detail-item cal-detail-subtask">
+              <div class="cal-detail-dot cal-dot weekly"></div>
+              <span>${escapeHtml(sub.name)}</span>
+            </div>`).join('')
+        : '';
+      return parentRow + subtaskRows;
+    };
 
     let html = '';
-    if (dailyItems.length) html += renderItems(dailyItems);
-    if (weeklyItems.length) {
+    dailies.forEach(t => { html += renderFlatItem(t.name, 'daily', 'daily'); });
+    if (weeklyParents.length) {
       html += `<div class="cal-routine-header" onclick="toggleCalRoutines()">
-        <span>📅 Routines (${weeklyItems.length})</span>
-        <span class="section-chevron" id="chevron-cal-routines">▼</span>
+        <span>📅 Routines (${weeklyParents.length})</span>
+        <span class="section-chevron open" id="chevron-cal-routines">▼</span>
       </div>`;
-      html += `<div id="list-cal-routines">${renderItems(weeklyItems)}</div>`;
+      html += `<div id="list-cal-routines">${weeklyParents.map(renderRoutineParent).join('')}</div>`;
     }
-    if (goalItems.length) html += renderItems(goalItems);
+    (goalsDue || []).forEach(g => { html += renderFlatItem(g.title, 'goal deadline', 'goal'); });
     itemsEl.innerHTML = html;
   }
 }
@@ -121,6 +162,7 @@ export function calPrev() {
   calMonth--;
   if (calMonth < 0) { calMonth = 11; calYear--; }
   calSelectedDay = null;
+  expandedCalRoutines.clear();
   document.getElementById('calDetail').classList.remove('open');
   renderCalendar();
 }
@@ -129,6 +171,18 @@ export function calNext() {
   calMonth++;
   if (calMonth > 11) { calMonth = 0; calYear++; }
   calSelectedDay = null;
+  expandedCalRoutines.clear();
   document.getElementById('calDetail').classList.remove('open');
   renderCalendar();
+}
+
+export function toggleCalRoutineExpand(parentId) {
+  if (expandedCalRoutines.has(parentId)) {
+    expandedCalRoutines.delete(parentId);
+  } else {
+    expandedCalRoutines.add(parentId);
+  }
+  if (calSelectedDay !== null) {
+    calSelectDay(calSelectedDay, null, null, null);
+  }
 }
