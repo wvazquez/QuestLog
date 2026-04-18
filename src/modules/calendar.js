@@ -59,6 +59,11 @@ export function renderCalendar() {
     grid.appendChild(cell);
   }
 
+  if (calSelectedDay === null
+      && today.getFullYear() === calYear
+      && today.getMonth() === calMonth) {
+    calSelectedDay = today.getDate();
+  }
   if (calSelectedDay !== null) calSelectDay(calSelectedDay, null, null, null);
 }
 
